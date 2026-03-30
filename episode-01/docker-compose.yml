@@ -1,0 +1,35 @@
+# ============================================================
+# Decode AI Using AI — Episode 1
+# docker-compose for CLI + optional Jupyter Lab
+# ============================================================
+
+services:
+  # --- CLI tool: data cleaner + notebook runner ---
+  cli:
+    build: .
+    container_name: decode-ai-cli
+    volumes:
+      - ./data:/workspace/data
+      - ./notebooks:/workspace/notebooks
+      - ./logs:/workspace/logs
+      - ./src:/workspace/src
+    entrypoint: ["python", "-m", "src.cli"]
+
+  # --- Jupyter Lab: for interactive exploration ---
+  jupyter:
+    build: .
+    container_name: decode-ai-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./data:/workspace/data
+      - ./notebooks:/workspace/notebooks
+      - ./src:/workspace/src
+    entrypoint: []
+    command: >
+      jupyter lab
+      --ip=0.0.0.0
+      --port=8888
+      --no-browser
+      --allow-root
+      --NotebookApp.token=decodeai

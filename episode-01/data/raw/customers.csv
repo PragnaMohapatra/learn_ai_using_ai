@@ -1,0 +1,13 @@
+  Name  , Email , Age,  City  , Signup Date , Purchase Amount
+Alice Johnson, alice@example.com, 29, San Francisco, 2025-01-15, 120.50
+ Bob Smith , bob@example.com, , New York, 2025-02-20, 89.99
+Alice Johnson, alice@example.com, 29, San Francisco, 2025-01-15, 120.50
+  Charlie Brown ,charlie@example.com, 35,  Los Angeles , 2025-03-10, 
+Dave Wilson, dave@example.com, 42, Chicago, 2025-04-05, 200.00
+ Eve Davis , , 28, Seattle, 2025-05-12, 55.75
+Frank Miller, frank@example.com, 31, Austin, 2025-06-01, 175.25
+, grace@example.com, 27, Denver, 2025-07-18, 95.00
+ Bob Smith , bob@example.com, , New York, 2025-02-20, 89.99
+Hannah Lee, hannah@example.com, 33, Portland, 2025-08-22, 310.00
+Ivan Torres, ivan@example.com, 45, Miami, 2025-09-30, 
+Jane Kim, jane@example.com, 26, Boston, 2025-10-11, 67.50
