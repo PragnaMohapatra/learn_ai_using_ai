@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Generated data (keep raw, ignore cleaned outputs)
+episode-*/data/cleaned/*
+!episode-*/data/cleaned/.gitkeep
+
+# Logs
+episode-*/logs/*
+!episode-*/logs/.gitkeep
