@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stop Reading About AI. Start Building With It.</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            max-width: 740px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #292929;
+        }
+        h1 { font-size: 2.5em; margin-bottom: 0.2em; line-height: 1.2; letter-spacing: -0.02em; }
+        h2 { font-size: 1.8em; margin-top: 1.5em; color: #1a8917; font-weight: 400; }
+        h3 { font-size: 1.4em; margin-top: 1.5em; font-weight: 600; }
+        p { font-size: 1.15em; margin-bottom: 1.2em; }
+        strong { font-weight: 600; }
+        hr { border: 0; border-top: 1px solid rgba(0, 0, 0, 0.1); margin: 3em auto; width: 50%; }
+        pre { background: #f8f9fa; padding: 20px; border-radius: 4px; overflow-x: auto; }
+        code { font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace; font-size: 0.9em; }
+        ul { font-size: 1.15em; margin-bottom: 1.2em; }
+        li { margin-bottom: 0.5em; }
+        em { color: #555; }
+    </style>
+</head>
+<body>
+
+    <h1>Stop Reading About AI. Start Building With It.</h1>
+
+    <h2>Episode 1: Build a Data Pipeline That Actually Works — In Docker, From Scratch</h2>
+
+    <h3>The Philosophy: Just Enough Depth</h3>
+
+    <p>This series follows a simple rule: <strong>Go deep enough to see the bottom of the pool. Not so deep you need diving gear.</strong></p>
+
+    <p>You don't need a PhD in machine learning to build with AI. You don't need to derive backpropagation by hand. You don't need to understand the mathematical proof behind attention mechanisms.</p>
+
+    <p>But you also can't just copy-paste from ChatGPT and call it understanding.</p>
+
+    <p>The sweet spot is in between: build real things, understand what each piece does, know enough to debug when it breaks, and move on.</p>
+
+    <p>That's what Episode 1 gives you. A working data pipeline. An understanding of why each step matters. And the confidence that when Episode 2 says "load the cleaned dataset," you know exactly what that means — because you built the cleaner yourself.</p>
+
+    <hr>
+
+    <h3>Why Data Cleaning Is Episode 1</h3>
+
+    <p>Not "What Is a Neural Network." Not "How Transformers Work." Data cleaning.</p>
+
+    <p>Here's an uncomfortable truth about AI work: <strong>80% of a real AI project is data preparation. The model is the easy part.</strong></p>
+
+    <p>Every AI project you'll ever work on — training a chatbot, building a recommendation engine, fine-tuning an LLM — starts with the same boring, unglamorous step: getting your data into shape.</p>
+
+    <p>If your data has duplicates, your model learns the same example twice and thinks it's more important than it is. If your data has missing values, your training crashes or your model learns garbage. If your headers are inconsistent, your pipeline breaks at 2 AM.</p>
+
+    <p>I could have started this series with neural networks or attention mechanisms. But that would be like teaching someone to cook by starting with molecular gastronomy. First, you learn to wash the vegetables, sharpen the knife, and keep your kitchen clean.</p>
+
+    <p><strong>Episode 1 is the kitchen.</strong></p>
+
+    <hr>
+
+    <h3>What We're Building</h3>
+
+    <p>We are building a Python command-line tool with two commands, running entirely inside Docker.</p>
+
+    <p><strong>The Clean Command:</strong> Takes a messy CSV file and fixes it. Normalizes headers, trims whitespace, removes duplicates, handles missing data, saves a clean CSV, and prints a JSON report.</p>
+
+    <p><strong>The Run-Notebook Command:</strong> Executes a Jupyter notebook without opening a browser. Runs every cell programmatically, saves the executed notebook with all outputs, and reports timing and errors.</p>
+
+    <p>None of this is glamorous. All of it is essential. Let's build it.</p>
+
+    <hr>
+
+    <h3>Step 1: The Project Structure (And The Rule of Raw Data)</h3>
+
+    <p>Every well-organized Python project looks roughly the same. If you clone a machine learning repo from GitHub, you'll see this pattern:</p>
+
+    <ul>
+        <li><strong>data/raw/</strong> — Untouched source data. Training data, downloaded datasets.</li>
+        <li><strong>data/cleaned/</strong> — Processed output. Feature-engineered data ready for models.</li>
+        <li><strong>notebooks/</strong> — Exploration, analysis, and experiments.</li>
+        <li><strong>src/</strong> — Reusable Python modules and utilities.</li>
+        <li><strong>logs/ & tests/</strong> — Execution records and automated tests.</li>
+    </ul>
+
+    <p>The most important rule in AI engineering: <strong>Separate your raw and cleaned data directories.</strong></p>
+
+    <p>Why? Because in AI work, you never modify your source data. Your raw training data is sacred. You always read from <code>raw/</code>, transform it, and write to <code>cleaned/</code>. If something goes wrong, your original data is untouched.</p>
+
+    <hr>
+
+    <h3>Step 2: The Messy Data</h3>
+
+    <p>We need data that's broken in realistic ways. I created a sample CSV with 12 rows and 8 deliberate problems:</p>
+
+    <ul>
+        <li><strong>Headers have extra spaces:</strong> The column isn't "Name" — it's " Name " with invisible spaces.</li>
+        <li><strong>Values have whitespace padding:</strong> "Bob Smith" and " Bob Smith " look like different people to standard deduplication algorithms.</li>
+        <li><strong>Duplicate rows:</strong> Two customers appear twice. Your model is subtly biased and you don't know why.</li>
+        <li><strong>Missing values everywhere:</strong> Blank ages, missing emails. Feed this to a model and you get NaN errors and crashed training runs.</li>
+    </ul>
+
+    <p>If you fed this directly to a model, you'd get garbage. "Garbage in, garbage out" isn't a cliché in AI — it's a law of physics.</p>
+
+    <hr>
+
+    <h3>Step 3: The Data Cleaner</h3>
+
+    <p>We build a Python module (<code>src/cleaner.py</code>) with small, focused functions that each fix one problem.</p>
+
+    <ul>
+        <li><strong>clean_headers()</strong> takes " Name " and turns it into <code>name</code>. Lowercases everything and replaces spaces with underscores.</li>
+        <li><strong>trim_strings()</strong> loops through text columns and strips leading/trailing whitespace.</li>
+        <li><strong>drop_duplicates()</strong> finds exact duplicate rows and removes them.</li>
+        <li><strong>handle_missing()</strong> deals with blanks using two strategies: either "drop" the row entirely, or "fill" them with averages and defaults.</li>
+    </ul>
+
+    <p>Why small functions instead of one big one? Because in real AI work, you constantly swap out individual steps. Next week you might want to handle missing values differently. Small, composable steps are the secret to scalable AI pipelines.</p>
+
+    <hr>
+
+    <h3>Step 4: The Notebook Runner</h3>
+
+    <p>Jupyter notebooks are great for exploration. They're terrible for automation. You can't put "open browser, click Run All, wait, check output" in an automated CI/CD pipeline.</p>
+
+    <p>The solution: execute notebooks programmatically using a Python library called <code>nbclient</code> (<code>src/notebook_runner.py</code>).</p>
+
+    <p>Imagine you're training models. After each training run, you want a notebook that loads predictions, calculates accuracy, and saves an HTML report. You don't want to manually open that notebook every time. You want an automated script to trigger it. That is what this module does.</p>
+
+    <hr>
+
+    <h3>Step 5: Containerize Everything with Docker</h3>
+
+    <p>You need Docker Desktop installed. That's it.</p>
+
+    <p>Python? Inside Docker. Pandas? Inside Docker. Jupyter? Inside Docker.</p>
+
+    <p>You don't install a single Python package on your Mac. Everything lives in the container. This is how real AI teams work — and it's why "works on my machine" stops being a problem.</p>
+
+    <p>By using <strong>Docker Volumes</strong>, we map our local data and code folders directly into the container. This means when the container creates the clean CSV, it immediately appears on your Mac's filesystem.</p>
+
+    <p>We wrap it all up in a <code>Makefile</code> so we never have to type long Docker commands:</p>
+
+<pre><code>run-clean:
+    docker compose run --rm cli clean \
+        /workspace/data/raw/customers.csv \
+        /workspace/data/cleaned/customers_clean.csv \
+        --missing drop --json
+
+run-notebook:
+    docker compose run --rm cli run-nb \
+        /workspace/notebooks/analyze_customers.ipynb
+
+run-all: run-clean run-notebook</code></pre>
+
+    <hr>
+
+    <h3>Run It</h3>
+
+    <p>Type <code>make run-all</code> and watch the pipeline do its job.</p>
+
+    <ol>
+        <li>It spins up the Python container.</li>
+        <li>It ingests the messy 12-row CSV.</li>
+        <li>It drops duplicates, fixes string formatting, and drops rows with missing data.</li>
+        <li>It saves a perfect, 5-row clean dataset to your local machine.</li>
+        <li>It immediately spins up the Jupyter Notebook, ingests the clean data, runs an analysis, and saves the executed notebook with charts and outputs.</li>
+    </ol>
+
+    <p><strong>One command. Complete automation.</strong></p>
+
+    <hr>
+
+    <h3>What You Just Built</h3>
+
+    <p>Let's look at the skills you now have:</p>
+
+    <ul>
+        <li><strong>Data cleaning:</strong> Built a multi-step pandas pipeline. (Preprocessing before training).</li>
+        <li><strong>Notebook automation:</strong> Executed notebooks without a browser. (Experiment reporting).</li>
+        <li><strong>Docker:</strong> Containerized the entire workflow. (Reproducible training environments).</li>
+        <li><strong>CLI design:</strong> Built clean/run commands. (Pipeline orchestration).</li>
+    </ul>
+
+    <p>None of this is AI itself. It's the infrastructure that makes AI work possible. It's the kitchen, not the recipe. But without a clean kitchen, every recipe fails.</p>
+
+    <p>When Episode 2 says "load the cleaned dataset," you know exactly what that means — because you built the cleaner yourself.</p>
+
+    <p><strong>Next up: Episode 2 — Text Embeddings.</strong> We'll take clean text data and convert it into vectors that machines can understand. Same approach: build it, run it, understand it. No PhD required.</p>
+
+</body>
+</html>
