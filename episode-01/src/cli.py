@@ -8,8 +8,14 @@ Commands:
 import argparse
 import json
 import sys
-from src.cleaner import clean_csv
-from src.notebook_runner import run_notebook
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from shared.ai_workflow.cleaner import clean_csv
+from shared.ai_workflow.notebook_runner import run_notebook
 
 
 def cmd_clean(args):

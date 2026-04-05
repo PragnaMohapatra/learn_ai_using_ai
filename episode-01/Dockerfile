@@ -16,20 +16,22 @@ ENV PYTHONUNBUFFERED=1
 
 # Set working directory inside the container
 WORKDIR /workspace
+ENV PYTHONPATH=/workspace
 
 # Install dependencies first (layer caching — explained below)
-COPY requirements.txt .
+COPY episode-01/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install the IPython kernel so notebooks can execute
 RUN python -m ipykernel install --user --name python3
 
-# Copy project source code
-COPY src/ ./src/
+# Copy shared and episode-specific source code
+COPY shared/ ./shared/
+COPY episode-01/src/ ./src/
 
 # Copy sample data and notebooks
-COPY data/ ./data/
-COPY notebooks/ ./notebooks/
+COPY episode-01/data/ ./data/
+COPY episode-01/notebooks/ ./notebooks/
 
 # Default entrypoint: the CLI
 ENTRYPOINT ["python", "-m", "src.cli"]

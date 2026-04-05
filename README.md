@@ -27,13 +27,22 @@ a blog post, and a podcast episode. No theory — just build, measure, improve.
 
 ## How to Use
 
-Each episode folder is self-contained with its own Dockerfile, source code, data, and README.
+Each episode keeps its own README, data, and notebooks, while **common reusable workflow code lives in `shared/ai_workflow/`** so later episodes can build on earlier ones without copying files around.
 
 ```bash
 cd episode-01
 make build
 make run-all
 ```
+
+## Shared Foundation
+
+As the series grows, common building blocks move to the repo root:
+
+- `shared/ai_workflow/cleaner.py` — reusable CSV cleaning pipeline
+- `shared/ai_workflow/notebook_runner.py` — reusable notebook execution logic
+
+This keeps the series compounding: Episode 2 reuses Episode 1 instead of duplicating it.
 
 ## Series Rules
 

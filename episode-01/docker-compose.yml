@@ -6,18 +6,23 @@
 services:
   # --- CLI tool: data cleaner + notebook runner ---
   cli:
-    build: .
+    build:
+      context: ..
+      dockerfile: episode-01/Dockerfile
     container_name: decode-ai-cli
     volumes:
       - ./data:/workspace/data
       - ./notebooks:/workspace/notebooks
       - ./logs:/workspace/logs
       - ./src:/workspace/src
+      - ../shared:/workspace/shared
     entrypoint: ["python", "-m", "src.cli"]
 
   # --- Jupyter Lab: for interactive exploration ---
   jupyter:
-    build: .
+    build:
+      context: ..
+      dockerfile: episode-01/Dockerfile
     container_name: decode-ai-jupyter
     ports:
       - "8888:8888"
@@ -25,6 +30,7 @@ services:
       - ./data:/workspace/data
       - ./notebooks:/workspace/notebooks
       - ./src:/workspace/src
+      - ../shared:/workspace/shared
     entrypoint: []
     command: >
       jupyter lab

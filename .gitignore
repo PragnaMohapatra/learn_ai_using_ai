@@ -29,3 +29,9 @@ episode-*/data/cleaned/*
 # Logs
 episode-*/logs/*
 !episode-*/logs/.gitkeep
+
+# Reports and secrets
+episode-*/data/reports/*
+!episode-*/data/reports/.gitkeep
+episode-*/notebooks/*_executed.ipynb
+.env
