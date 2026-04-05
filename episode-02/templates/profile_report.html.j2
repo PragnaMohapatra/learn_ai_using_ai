@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Episode 2 Data Profile</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #fffaf2;
+      --panel: #ffffff;
+      --ink: #1f2937;
+      --muted: #5b6472;
+      --line: #e5dccf;
+      --accent: #b45309;
+      --accent-soft: #fef3c7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: radial-gradient(circle at top right, #fde68a, transparent 24%), var(--bg);
+      color: var(--ink);
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header {
+      margin-bottom: 28px;
+    }
+    h1, h2 {
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+    p {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin: 24px 0;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(148, 103, 28, 0.08);
+    }
+    .label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .value {
+      font-size: 1.8rem;
+      margin-top: 6px;
+    }
+    .source {
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 24px;
+      color: #78350f;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      background: #f8efe2;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      font-size: 0.8rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    @media (max-width: 760px) {
+      table, thead, tbody, th, td, tr { display: block; }
+      thead { display: none; }
+      tr {
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      td::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Episode 2 Data Profile</h1>
+      <p>Generated at {{ report.timestamp }}</p>
+    </header>
+
+    <div class="source">Source file: {{ report.source_file }}</div>
+
+    <section class="stats">
+      <article class="card">
+        <div class="label">Rows</div>
+        <div class="value">{{ report.rows }}</div>
+      </article>
+      <article class="card">
+        <div class="label">Columns</div>
+        <div class="value">{{ report.columns_count }}</div>
+      </article>
+      <article class="card">
+        <div class="label">Numeric Columns</div>
+        <div class="value">{{ report.numeric_columns | length }}</div>
+      </article>
+      <article class="card">
+        <div class="label">Missing Values</div>
+        <div class="value">{{ report.missing_values_total }}</div>
+      </article>
+    </section>
+
+    <section>
+      <h2>Column Profiles</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Kind</th>
+            <th>Missing</th>
+            <th>Unique</th>
+            <th>Samples</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for column in report.column_profiles %}
+          <tr>
+            <td data-label="Name">{{ column.name }}</td>
+            <td data-label="Kind">{{ column.kind }}</td>
+            <td data-label="Missing">{{ column.missing_count }} ({{ column.missing_pct }}%)</td>
+            <td data-label="Unique">{{ column.unique_count }}</td>
+            <td data-label="Samples">
+              {% for sample in column.sample_values %}
+              <span class="pill">{{ sample }}</span>
+              {% endfor %}
+            </td>
+            <td data-label="Details">
+              {% if column.numeric_summary %}
+                mean={{ column.numeric_summary.mean }}, median={{ column.numeric_summary.median }}, min={{ column.numeric_summary.min }}, max={{ column.numeric_summary.max }}
+              {% elif column.datetime_summary %}
+                min={{ column.datetime_summary.min }}, max={{ column.datetime_summary.max }}
+              {% else %}
+                {% for item in column.top_values %}
+                <span class="pill">{{ item.label }} ({{ item.count }})</span>
+                {% endfor %}
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
