@@ -101,6 +101,18 @@
       margin-right: 6px;
       margin-bottom: 6px;
     }
+    .prompt {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fffef8;
+      color: var(--ink);
+      white-space: pre-wrap;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
     @media (max-width: 760px) {
       table, thead, tbody, th, td, tr { display: block; }
       thead { display: none; }
@@ -146,6 +158,65 @@
         <div class="value">{{ report.missing_values_total }}</div>
       </article>
     </section>
+
+    {% if report.ai_narrative and report.ai_narrative.content %}
+    <section style="margin-bottom: 32px;">
+      <h2>AI Narrative</h2>
+      <div class="card">
+        <div class="label">{{ report.ai_narrative.status }}{% if report.ai_narrative.model %} via {{ report.ai_narrative.model }}{% endif %}</div>
+        <p style="white-space: pre-line; margin-top: 8px; color: var(--ink);">{{ report.ai_narrative.content }}</p>
+        {% if report.ai_narrative.prompt %}
+        <div class="label" style="margin-top: 12px;">Prompt Used</div>
+        <div class="prompt">{{ report.ai_narrative.prompt }}</div>
+        {% endif %}
+      </div>
+    </section>
+    {% elif report.ai_narrative and report.ai_narrative.reason %}
+    <section style="margin-bottom: 32px;">
+      <h2>AI Narrative</h2>
+      <div class="card">
+        <div class="label">{{ report.ai_narrative.status }}</div>
+        <p style="margin-top: 8px;">{{ report.ai_narrative.reason }}</p>
+        {% if report.ai_narrative.prompt %}
+        <div class="label" style="margin-top: 12px;">Prompt Used</div>
+        <div class="prompt">{{ report.ai_narrative.prompt }}</div>
+        {% endif %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if report.charts.missing_values %}
+    <section style="margin-bottom: 32px;">
+      <h2>Missing Values</h2>
+      <img src="data:image/png;base64,{{ report.charts.missing_values }}" style="max-width:100%; border-radius:12px; border:1px solid var(--line);" alt="Missing values chart">
+    </section>
+    {% endif %}
+
+    {% if report.charts.numeric %}
+    <section style="margin-bottom: 32px;">
+      <h2>Numeric Distributions</h2>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+        {% for col, img in report.charts.numeric.items() %}
+        <div class="card" style="padding: 12px;">
+          <img src="data:image/png;base64,{{ img }}" style="width:100%; border-radius:8px;" alt="{{ col }} histogram">
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if report.charts.categorical %}
+    <section style="margin-bottom: 32px;">
+      <h2>Categorical Distributions</h2>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+        {% for col, img in report.charts.categorical.items() %}
+        <div class="card" style="padding: 12px;">
+          <img src="data:image/png;base64,{{ img }}" style="width:100%; border-radius:8px;" alt="{{ col }} bar chart">
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
     <section>
       <h2>Column Profiles</h2>

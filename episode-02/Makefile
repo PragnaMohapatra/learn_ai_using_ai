@@ -10,7 +10,7 @@ run-analyze:
 	docker compose run --rm cli analyze \
 		/workspace/episode-01/data/cleaned/customers_clean.csv \
 		/workspace/episode-02/data/reports \
-		--json
+		--charts
 
 shell:
 	docker compose run --rm cli bash
@@ -21,6 +21,6 @@ help:
 	@echo "===================================="
 	@echo "  make build        Build the Episode 2 image"
 	@echo "  make test         Run the Episode 2 test suite"
-	@echo "  make run-analyze  Reuse Episode 1 cleaned data and profile it"
+	@echo "  make run-analyze  Reuse Episode 1 cleaned data, render charts, and write reports"
 	@echo "  make shell        Open a shell inside the Episode 2 container"
 	@echo ""

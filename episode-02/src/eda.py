@@ -1,12 +1,22 @@
 """Episode 2 EDA — data profiling functions."""
 
+import base64
 from datetime import datetime
+from io import BytesIO
 import json
+import os
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
+from dotenv import load_dotenv
 from jinja2 import Template
+import matplotlib
+from matplotlib.figure import Figure
 import pandas as pd
+from openai import OpenAI
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 
 DEFAULT_TEMPLATE = """<!DOCTYPE html>
@@ -186,7 +196,219 @@ def _load_template() -> Template:
     return Template(DEFAULT_TEMPLATE)
 
 
-def generate_basic_profile(csv_path: str, output_dir: str) -> dict:
+def build_ai_summary_prompt(report: dict[str, Any]) -> str:
+    column_lines = []
+    for column in report["column_profiles"]:
+        details = []
+        if column["numeric_summary"]:
+            details.append(
+                "mean={mean}, median={median}, min={min}, max={max}".format(
+                    **column["numeric_summary"]
+                )
+            )
+        elif column["datetime_summary"]:
+            details.append(
+                "min={min}, max={max}".format(**column["datetime_summary"])
+            )
+        elif column["top_values"]:
+            details.append(
+                "top_values=" + ", ".join(
+                    f"{item['label']} ({item['count']})" for item in column["top_values"]
+                )
+            )
+        column_lines.append(
+            "- {name}: kind={kind}, missing={missing_count} ({missing_pct}%), unique={unique_count}"
+            "{suffix}".format(
+                name=column["name"],
+                kind=column["kind"],
+                missing_count=column["missing_count"],
+                missing_pct=column["missing_pct"],
+                unique_count=column["unique_count"],
+                suffix=f", {'; '.join(details)}" if details else "",
+            )
+        )
+
+    return "\n".join(
+        [
+            "Write a concise data-analysis narrative for this dataset.",
+            "Return 3 short paragraphs:",
+            "1. overall dataset shape and data quality,",
+            "2. the most important numeric and categorical patterns,",
+            "3. recommended next AI or ML steps.",
+            "Do not invent facts beyond the profile.",
+            "",
+            f"Rows: {report['rows']}",
+            f"Columns: {report['columns_count']}",
+            f"Numeric columns: {', '.join(report['numeric_columns']) or 'none'}",
+            f"Datetime columns: {', '.join(report['datetime_columns']) or 'none'}",
+            f"Categorical columns: {', '.join(report['categorical_columns']) or 'none'}",
+            f"Missing values total: {report['missing_values_total']}",
+            "",
+            "Column details:",
+            *column_lines,
+        ]
+    )
+
+
+def _log_openai_prompt(*, model: str, system_message: str, prompt: str) -> None:
+    log_path = Path(
+        os.getenv(
+            "OPENAI_PROMPT_LOG_FILE",
+            str(Path(__file__).resolve().parents[1] / "logs" / "openai_prompts.log"),
+        )
+    )
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().isoformat()
+    log_entry = (
+        "\n".join(
+            [
+                f"[{timestamp}] model={model}",
+                "[SYSTEM]",
+                system_message,
+                "[USER]",
+                prompt,
+                "-" * 80,
+            ]
+        )
+        + "\n"
+    )
+    log_path.write_text(
+        log_path.read_text(encoding="utf-8") + log_entry if log_path.exists() else log_entry,
+        encoding="utf-8",
+    )
+
+
+def generate_ai_narrative(
+    report: dict[str, Any],
+    *,
+    api_key: Optional[str] = None,
+    model: Optional[str] = None,
+    client: Optional[Any] = None,
+) -> dict[str, Any]:
+    load_dotenv()
+
+    resolved_model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    resolved_api_key = api_key or os.getenv("OPENAI_API_KEY")
+    prompt = build_ai_summary_prompt(report)
+    system_message = "You are a careful data analyst. Base your summary only on the provided dataset profile."
+
+    if not resolved_api_key and client is None:
+        return {
+            "status": "skipped",
+            "provider": "openai",
+            "model": resolved_model,
+            "content": None,
+            "reason": "OPENAI_API_KEY is not set.",
+            "prompt": prompt,
+        }
+
+    try:
+        active_client = client or OpenAI(api_key=resolved_api_key)
+        _log_openai_prompt(model=resolved_model, system_message=system_message, prompt=prompt)
+        if hasattr(active_client, "responses"):
+            response = active_client.responses.create(
+                model=resolved_model,
+                input=[
+                    {
+                        "role": "system",
+                        "content": system_message,
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_output_tokens=280,
+            )
+            content = response.output_text.strip()
+        else:
+            # Backward-compatible path for older OpenAI SDK versions.
+            response = active_client.chat.completions.create(
+                model=resolved_model,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=280,
+            )
+            content = (response.choices[0].message.content or "").strip()
+        return {
+            "status": "generated",
+            "provider": "openai",
+            "model": resolved_model,
+            "content": content,
+            "reason": None,
+            "prompt": prompt,
+        }
+    except Exception as exc:
+        return {
+            "status": "error",
+            "provider": "openai",
+            "model": resolved_model,
+            "content": None,
+            "reason": str(exc),
+            "prompt": prompt,
+        }
+
+
+def _fig_to_base64(fig: Figure) -> str:
+    buf = BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=96)
+    plt.close(fig)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode("utf-8")
+
+def generate_charts(df: pd.DataFrame, column_profiles: list) -> dict:
+    charts = {}
+
+    # Missing values bar chart
+    fig, ax = plt.subplots(figsize=(8, 3))
+    missing = df.isna().sum()
+    missing = missing[missing > 0]
+    if not missing.empty:
+        missing.sort_values(ascending=True).plot(kind="barh", ax=ax, color="#b45309")
+        ax.set_title("Missing Values per Column")
+        ax.set_xlabel("Count")
+    else:
+        ax.text(0.5, 0.5, "No missing values", ha="center", va="center", transform=ax.transAxes)
+        ax.set_title("Missing Values")
+    ax.spines[["top", "right"]].set_visible(False)
+    charts["missing_values"] = _fig_to_base64(fig)
+
+    # Numeric histograms
+    charts["numeric"] = {}
+    for profile in column_profiles:
+        if profile["kind"] != "numeric":
+            continue
+        col = profile["name"]
+        fig, ax = plt.subplots(figsize=(6, 3))
+        df[col].dropna().plot(kind="hist", ax=ax, bins=10, color="#2563eb", edgecolor="white")
+        ax.set_title(f"{col} — distribution")
+        ax.set_xlabel(col)
+        ax.spines[["top", "right"]].set_visible(False)
+        charts["numeric"][col] = _fig_to_base64(fig)
+
+    # Categorical bar charts
+    charts["categorical"] = {}
+    for profile in column_profiles:
+        if profile["kind"] != "categorical" or not profile["top_values"]:
+            continue
+        col = profile["name"]
+        labels = [item["label"] for item in profile["top_values"]]
+        counts = [item["count"] for item in profile["top_values"]]
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.barh(labels[::-1], counts[::-1], color="#16a34a")
+        ax.set_title(f"{col} — top values")
+        ax.set_xlabel("Count")
+        ax.spines[["top", "right"]].set_visible(False)
+        charts["categorical"][col] = _fig_to_base64(fig)
+
+    return charts
+
+def generate_basic_profile(
+    csv_path: str,
+    output_dir: str,
+    with_charts: bool = False,
+    with_ai_summary: bool = False,
+    ai_client: Optional[Any] = None,
+) -> dict:
     df = load_clean_dataset(csv_path)
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -208,7 +430,15 @@ def generate_basic_profile(csv_path: str, output_dir: str) -> dict:
         "column_profiles": column_profiles,
         "report_file": str(report_file),
         "html_report_file": str(html_report_file),
+        "charts": {},
+        "ai_narrative": None,
     }
+
+    if with_charts:
+        report["charts"] = generate_charts(df, column_profiles)
+
+    if with_ai_summary:
+        report["ai_narrative"] = generate_ai_narrative(report, client=ai_client)
 
     report_file.write_text(json.dumps(report, indent=2), encoding="utf-8")
     html_report_file.write_text(_load_template().render(report=report), encoding="utf-8")

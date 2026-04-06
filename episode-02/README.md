@@ -27,4 +27,26 @@ That means:
 - **Episode 2** consumes that clean data and generates deeper analysis
 - **shared/ai_workflow/** holds the reusable building blocks
 
-Next step: implement `src/eda.py` and the `analyze` workflow.
+## Current workflow
+
+Episode 2 now does three useful things with the cleaned dataset from Episode 1:
+
+- profiles column types and missing values
+- renders an HTML report with charts
+- can optionally ask an LLM for a short narrative summary of the dataset
+
+## Run it
+
+```bash
+docker compose run --rm cli analyze \
+	/workspace/episode-01/data/cleaned/customers_clean.csv \
+	/workspace/episode-02/data/reports \
+	--charts
+```
+
+If you want an AI-written summary in the report, set `OPENAI_API_KEY` and add `--ai-summary`.
+
+The CLI keeps terminal output concise and writes full artifacts to files in `data/reports/`:
+
+- `basic_profile.json`
+- `basic_profile.html`
