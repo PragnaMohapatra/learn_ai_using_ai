@@ -1,0 +1,22 @@
+{
+  "labels": [
+    "ham",
+    "spam"
+  ],
+  "train_rows": 4126,
+  "test_rows": 1032,
+  "test_size": 0.2,
+  "random_state": 42,
+  "stratified": true,
+  "vocabulary_size": 2000,
+  "model_scores": {
+    "logistic_regression": {
+      "accuracy": 0.9612
+    },
+    "multinomial_nb": {
+      "accuracy": 0.9777
+    }
+  },
+  "best_model": "multinomial_nb",
+  "best_accuracy": 0.9777
+}

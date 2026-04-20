@@ -1,0 +1,15 @@
+services:
+  cli:
+    build:
+      context: ..
+      dockerfile: episode-03/Dockerfile
+    container_name: decode-ai-episode-03-cli
+    working_dir: /workspace/episode-03
+    environment:
+      PYTHONPATH: /workspace:/workspace/episode-03
+    volumes:
+      - ./:/workspace/episode-03
+      - ../shared:/workspace/shared:ro
+      - ../episode-01/data:/workspace/episode-01/data:ro
+      - ../episode-02/data:/workspace/episode-02/data:ro
+    command: ["--help"]

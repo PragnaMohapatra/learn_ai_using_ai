@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Episode 3: Learn AI by Doing It — Your First ML Model</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Georgia,"Times New Roman",serif;line-height:1.7;color:#1f2937;background:#fffaf2}
+    .container{max-width:960px;margin:0 auto;padding:40px 24px;background:#fff;box-shadow:0 0 30px rgba(0,0,0,.08)}
+    h1{font-size:2.4em;text-align:center;margin-bottom:6px;color:#1a1a1a}
+    .subtitle{text-align:center;color:#7f8c8d;font-size:1.15em;margin-bottom:30px}
+    h2{font-size:1.6em;color:#2c3e50;margin:36px 0 14px;border-bottom:3px solid #b45309;padding-bottom:8px}
+    h3{font-size:1.2em;color:#34495e;margin:22px 0 10px}
+    p{margin-bottom:14px;text-align:justify}
+    ul,ol{margin:0 0 16px 28px}
+    li{margin-bottom:6px}
+    a{color:#b45309;text-decoration:none}
+    a:hover{text-decoration:underline}
+    pre{background:#1e1e1e;color:#d4d4d4;padding:16px;margin:16px 0;border-radius:6px;overflow-x:auto;font-size:.88em;line-height:1.5;border-left:4px solid #b45309}
+    code{font-family:'Courier New',monospace}
+    .inline-code{background:#fef3c7;padding:2px 6px;border-radius:3px;font-size:.92em;color:#78350f}
+    p code, li code{background:#fef3c7;padding:2px 6px;border-radius:3px;font-size:.92em;color:#78350f;font-family:'Courier New',monospace}
+    .callout{background:#fef3c7;border-left:4px solid #f59e0b;padding:14px 16px;margin:18px 0;border-radius:4px}
+    .callout strong{color:#92400e}
+    .file-header{background:#f8efe2;border:1px solid #e5dccf;padding:10px 14px;border-radius:6px 6px 0 0;font-weight:bold;font-family:'Courier New',monospace;font-size:.95em;color:#78350f;margin-top:18px;margin-bottom:0}
+    .file-header+pre{margin-top:0;border-radius:0 0 6px 6px}
+    .divider{border-top:2px solid #e5dccf;margin:40px 0}
+    .conclusion{background:#d1fae5;border:1px solid #a7f3d0;border-radius:6px;padding:20px;margin:24px 0}
+    .footer{text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid #e5dccf;color:#9ca3af;font-size:.9em}
+    .toc{background:#f8f9fa;border:1px solid #e5dccf;padding:18px 22px;margin:24px 0;border-radius:6px}
+    .toc ol{margin:8px 0 0 24px}
+    table{width:100%;border-collapse:collapse;margin:18px 0;font-size:.95em}
+    th,td{border:1px solid #e5dccf;padding:8px 12px;text-align:left}
+    th{background:#f8efe2;color:#78350f}
+    tr:nth-child(even) td{background:#fffaf2}
+    .miss{color:#b91c1c;font-weight:bold}
+    .hit{color:#15803d}
+    dl{margin:0 0 16px 0}
+    dt{font-weight:bold;color:#78350f;margin-top:10px;font-family:'Courier New',monospace}
+    dd{margin:4px 0 0 20px}
+    @media print{body{background:#fff}.container{box-shadow:none}pre{page-break-inside:avoid}}
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Episode 3: Learn AI by Doing It</h1>
+<p class="subtitle">Train a spam classifier from scratch, step by step — and learn what every line of scikit-learn is actually doing.</p>
+
+<p style="text-align:center"><strong>Source Code:</strong> <a href="https://github.com/PragnaMohapatra/learn_ai_using_ai/tree/main/episode-03">github.com/PragnaMohapatra/learn_ai_using_ai/tree/main/episode-03</a></p>
+
+<div class="divider"></div>
+
+<h2>Why DIY Projects in the Age of AI</h2>
+
+<p>The world is moving at a pace no curriculum can keep up with. Large language models write production code, generate test suites, and draft documentation in seconds. The traditional pillar of software engineering — deep mastery of one technology — is no longer sufficient on its own. Breadth is becoming pivotal.</p>
+
+<p>When AI can write the code for you, the bottleneck shifts. What matters now is knowing what to ask for. Understanding <strong>why</strong> a train/test split is stratified, <strong>what</strong> TF-IDF actually computes, and <strong>when</strong> a 97% test accuracy is lying to you — that is what separates an engineer who can ship ML from one who is one <span class="inline-code">scikit-learn</span> tutorial deep.</p>
+
+<p>Episode 1 ingested and cleaned raw data. Episode 2 profiled it with a deterministic EDA pipeline and an opt-in AI narrative. Episode 3 takes the next step: we train our first real ML model. A spam classifier. No deep learning. No GPU. No magic. Just <span class="inline-code">pandas</span>, <span class="inline-code">scikit-learn</span>, and the discipline of building it one layer at a time so every function earns its place.</p>
+
+<div class="toc">
+<strong>What we'll cover:</strong>
+<ol>
+  <li>Why Start with a Classifier</li>
+  <li>Project Structure</li>
+  <li>Step 1 — Docker &amp; Infrastructure</li>
+  <li>Step 2 — Get Real, Licensed Data</li>
+  <li>Step 3 — Load and Clean the Labeled Dataset</li>
+  <li>Step 4 — Split Train and Test (and Why Stratification Matters)</li>
+  <li>Step 5 — Turn Text into Numbers with TF-IDF</li>
+  <li>Step 6 — Train Two Baseline Models and Compare</li>
+  <li>Step 7 — Save the Artifacts</li>
+  <li>Step 8 — The Prediction Module</li>
+  <li>Step 9 — The CLI Entry Point</li>
+  <li>Step 10 — Tests (All 15 of Them)</li>
+  <li>Reality Check: 15 Real-World Messages</li>
+  <li>Exercise vs Production: What We Did Not Do</li>
+  <li>Glossary</li>
+</ol>
+</div>
+
+<div class="divider"></div>
+
+<h2>1. Why Start with a Classifier</h2>
+
+<p>Classification is the "hello world" of supervised machine learning. You have inputs (SMS messages, reviews, emails) and you want a label (spam / ham, positive / negative, fraud / legit). The whole pipeline that powers much larger systems — data loading, feature engineering, train/test discipline, model selection, serialization, inference — is already present in the smallest classifier.</p>
+
+<p>If you can build a spam classifier properly, you can build a next-token predictor, a review scorer, or a churn model. The shape of the code is the same. Only the math inside one call to <span class="inline-code">.fit()</span> changes.</p>
+
+<p>We deliberately pick <strong>text classification</strong> because:</p>
+<ul>
+  <li>Real datasets are free and licensed (UCI SMS Spam, IMDB reviews, Yelp polarity).</li>
+  <li>Feature engineering (TF-IDF) is a concept worth understanding before you hide it behind an embedding model.</li>
+  <li>A linear model on bag-of-words is genuinely competitive for short-text spam. You do not need a transformer to get 97% accuracy.</li>
+</ul>
+
+<h2>2. Project Structure</h2>
+
+<p>Episode 3 mirrors the layout we settled on in Episode 2 so the muscle memory transfers:</p>
+
+<pre><code>episode-03/
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── requirements.txt
+├── README.md
+├── src/
+│   ├── __init__.py
+│   ├── cli.py
+│   ├── training.py
+│   └── prediction.py
+├── tests/
+│   ├── test_cli.py
+│   ├── test_training.py
+│   └── test_prediction.py
+├── templates/
+└── data/
+    ├── SMSSpamCollection       # raw
+    ├── sms_spam_clean.csv      # cleaned
+    └── artifacts/
+        ├── best_model.joblib
+        ├── vectorizer.joblib
+        └── metrics.json</code></pre>
+
+<p>Notice what is <strong>not</strong> there: no notebook, no experiment-tracking dashboard, no <span class="inline-code">model.pkl</span> checked into git. The deliverables are reproducible artifacts written to <span class="inline-code">data/artifacts/</span>. Everything else is code you can re-run.</p>
+
+<h2>3. Step 1 — Docker &amp; Infrastructure</h2>
+
+<p>Same pattern as Episode 2. Docker is not ceremony — it is how you make sure the person cloning your repo in six months gets the same NumPy version that produced your 97% accuracy.</p>
+
+<h3>Dockerfile</h3>
+<div class="file-header">Dockerfile</div>
+<pre><code>FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/workspace:/workspace/episode-03
+
+WORKDIR /workspace/episode-03
+
+COPY episode-03/requirements.txt /tmp/requirements.txt
+RUN python -m pip install --upgrade pip &amp;&amp; \
+    pip install -r /tmp/requirements.txt
+
+COPY shared/ /workspace/shared/
+COPY episode-03/ /workspace/episode-03/
+
+ENTRYPOINT ["python", "-m", "src.cli"]
+CMD ["--help"]</code></pre>
+
+<p>The critical detail is <span class="inline-code">PYTHONPATH</span>. It lets <span class="inline-code">from src import train_classifier</span> and <span class="inline-code">from shared.ai_workflow import ...</span> both resolve the same way on your laptop and inside the container.</p>
+
+<h3>docker-compose.yml</h3>
+<div class="file-header">docker-compose.yml</div>
+<pre><code>services:
+  cli:
+    build:
+      context: ..
+      dockerfile: episode-03/Dockerfile
+    container_name: decode-ai-episode-03-cli
+    working_dir: /workspace/episode-03
+    environment:
+      PYTHONPATH: /workspace:/workspace/episode-03
+    volumes:
+      - ./:/workspace/episode-03
+      - ../shared:/workspace/shared:ro
+      - ../episode-01/data:/workspace/episode-01/data:ro
+      - ../episode-02/data:/workspace/episode-02/data:ro
+    command: ["--help"]</code></pre>
+
+<p>Again, <span class="inline-code">context: ..</span> is the parent directory, so Docker can see <span class="inline-code">shared/</span>, <span class="inline-code">episode-01/data/</span>, and <span class="inline-code">episode-02/data/</span> at build and run time. Earlier episodes become read-only dependencies for later ones.</p>
+
+<h3>requirements.txt</h3>
+<p>Pinned so that a year from now the model scores are reproducible to the fourth decimal place:</p>
+<div class="file-header">requirements.txt</div>
+<pre><code>pandas==2.2.3
+scikit-learn==1.5.2
+joblib==1.4.2
+jinja2==3.1.4
+pytest==8.3.5</code></pre>
+
+<h3>Makefile</h3>
+<p>Four commands you will actually type:</p>
+<div class="file-header">Makefile</div>
+<pre><code>build:
+	docker compose build cli
+
+test:
+	docker compose run --rm --entrypoint python cli -m pytest -q
+
+shell:
+	docker compose run --rm cli bash
+
+help:
+	@echo "make build | make test | make shell"</code></pre>
+
+<h2>4. Step 2 — Get Real, Licensed Data</h2>
+
+<p>Toy datasets teach toy lessons. We downloaded the <strong>UCI SMS Spam Collection</strong> (CC BY 4.0):</p>
+
+<pre><code>curl -L -o data/sms_spam_collection.zip \
+  https://archive.ics.uci.edu/static/public/228/sms+spam+collection.zip
+unzip data/sms_spam_collection.zip -d data/</code></pre>
+
+<p>We get <span class="inline-code">SMSSpamCollection</span> — a tab-separated file with two columns: <span class="inline-code">label</span> (<span class="inline-code">ham</span> / <span class="inline-code">spam</span>) and <span class="inline-code">text</span>. 5,574 messages. About 13% spam. Real UK SMS traffic from the early 2000s.</p>
+
+<div class="callout"><strong>Heads up:</strong> this dataset is from 2002. It knows nothing about WhatsApp, PayPal, crypto, or 2FA phishing. A model trained on it is a time capsule. That is fine for learning — not fine for shipping. Keep this in mind; we come back to it in the reality-check section.</div>
+
+<h2>5. Step 3 — Load and Clean the Labeled Dataset</h2>
+
+<p>We build the pipeline one function at a time in <span class="inline-code">src/training.py</span>. Each function does one thing. Each is independently testable.</p>
+
+<h3>Read the raw file</h3>
+<p>The dataset ships as tab-separated, but if we later re-save it as CSV, we want the same loader to handle both:</p>
+
+<div class="file-header">src/training.py — _read_input_dataset</div>
+<pre><code>def _read_input_dataset(input_path: str) -&gt; pd.DataFrame:
+    dataset_path = Path(input_path)
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"Training dataset not found: {input_path}")
+
+    if dataset_path.suffix.lower() == ".csv":
+        dataframe = pd.read_csv(dataset_path)
+    else:
+        dataframe = pd.read_csv(
+            dataset_path,
+            sep="\t",
+            header=None,
+            names=["label", "text"],
+        )
+
+    if dataframe.empty:
+        raise ValueError("Training dataset is empty.")
+
+    return dataframe</code></pre>
+
+<p>Fail fast with a clear message. We will do that everywhere.</p>
+
+<h3>Clean the labels and text</h3>
+<div class="file-header">src/training.py — clean_training_dataframe</div>
+<pre><code>REQUIRED_COLUMNS = {"text", "label"}
+
+def clean_training_dataframe(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
+    missing_columns = REQUIRED_COLUMNS - set(dataframe.columns)
+    if missing_columns:
+        raise ValueError(
+            f"Training dataset is missing required columns: "
+            f"{', '.join(sorted(missing_columns))}"
+        )
+
+    cleaned = dataframe.loc[:, ["text", "label"]].copy()
+    cleaned["text"] = (
+        cleaned["text"].fillna("").astype(str)
+        .str.replace(r"\s+", " ", regex=True)
+        .str.strip()
+    )
+    cleaned["label"] = (
+        cleaned["label"].astype("string").str.strip().str.lower()
+    )
+    cleaned = cleaned[
+        (cleaned["text"] != "")
+        &amp; cleaned["label"].notna()
+        &amp; (cleaned["label"] != "")
+    ]
+    cleaned = cleaned.drop_duplicates(subset=["text", "label"]).reset_index(drop=True)
+
+    if cleaned.empty:
+        raise ValueError("Training dataset has no usable rows after cleaning.")
+
+    return cleaned</code></pre>
+
+<p>What this actually does:</p>
+<ul>
+  <li>Validates the columns exist — the model cannot guess what "spam" looks like if there is no <span class="inline-code">label</span> column.</li>
+  <li>Collapses runs of whitespace (<span class="inline-code">"hello    world"</span> → <span class="inline-code">"hello world"</span>) so tokenization does not create bogus vocabulary entries.</li>
+  <li>Lowercases labels so <span class="inline-code">"Spam"</span>, <span class="inline-code">"SPAM"</span>, and <span class="inline-code">"spam"</span> are the same class.</li>
+  <li>Drops empty rows and exact duplicates. The SMS Spam Collection has a lot of duplicated messages — after dedup we go from 5,574 to <strong>5,158</strong> rows.</li>
+</ul>
+
+<p>And <span class="inline-code">prepare_training_data</span> writes the cleaned CSV to disk so the rest of the pipeline has a stable input.</p>
+
+<h2>6. Step 4 — Split Train and Test (and Why Stratification Matters)</h2>
+
+<p>This is where the questions started flying, so let me reproduce the Q&amp;A before the code.</p>
+
+<div class="callout"><strong>"What is <code>stratify</code> doing, exactly?"</strong><br>
+When you do a random 80/20 split on a dataset that is 87% ham and 13% spam, you can — by sheer bad luck — end up with a test set that is 95% ham. Your "accuracy" will look great (predict ham always → 95% right) but you have learned nothing about spam. Stratification says: <em>preserve the class ratio in both splits</em>. If the full dataset is 87/13, the training set is 87/13 and the test set is 87/13.</div>
+
+<div class="callout"><strong>"And <code>random_state</code>?"</strong><br>
+Train/test splits are random. <span class="inline-code">random_state=42</span> (or any fixed integer) pins the random number generator so that running the code twice gives the exact same split. Reproducibility beats cleverness.</div>
+
+<div class="callout"><strong>"What does <code>.fit()</code> actually do?"</strong><br>
+For a vectorizer: it <strong>learns</strong> — it scans the training text, builds the vocabulary, computes document frequencies. For a model: it learns parameters (weights for logistic regression, class-conditional word probabilities for naive Bayes). <span class="inline-code">.transform()</span> (or <span class="inline-code">.predict()</span>) then <strong>applies</strong> what was learned.</div>
+
+<p>Now the code, with a safety net for tiny datasets we use in tests:</p>
+
+<div class="file-header">src/training.py — split_training_data</div>
+<pre><code>from math import ceil
+from sklearn.model_selection import train_test_split
+
+DEFAULT_TEST_SIZE = 0.2
+DEFAULT_RANDOM_STATE = 42
+
+def split_training_data(
+    dataframe: pd.DataFrame,
+    *,
+    test_size: float = DEFAULT_TEST_SIZE,
+    random_state: int = DEFAULT_RANDOM_STATE,
+) -&gt; dict:
+    if len(dataframe) &lt; 2:
+        raise ValueError("Need at least 2 rows to split training data.")
+
+    X = dataframe["text"]
+    y = dataframe["label"]
+
+    stratify = None
+    class_count = int(y.nunique())
+    test_rows = ceil(len(dataframe) * test_size)
+    train_rows = len(dataframe) - test_rows
+
+    if (
+        class_count &gt; 1
+        and y.value_counts().min() &gt;= 2
+        and test_rows &gt;= class_count
+        and train_rows &gt;= class_count
+    ):
+        stratify = y
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=stratify,
+    )
+
+    return {
+        "X_train": X_train.reset_index(drop=True),
+        "X_test": X_test.reset_index(drop=True),
+        "y_train": y_train.reset_index(drop=True),
+        "y_test": y_test.reset_index(drop=True),
+        "train_rows": int(len(X_train)),
+        "test_rows": int(len(X_test)),
+        "stratified": stratify is not None,
+    }</code></pre>
+
+<p>Why the gated <span class="inline-code">if</span>? Because our tests use a 4-row fixture and scikit-learn refuses to stratify when there are not enough samples per class to go around. Rather than catching the exception, we check the preconditions up front and silently fall back to a non-stratified split. On the real dataset (5,158 rows) the conditions are always satisfied — stratification kicks in.</p>
+
+<h2>7. Step 5 — Turn Text into Numbers with TF-IDF</h2>
+
+<p>Models do not read English. They consume vectors of floats. So we need a deterministic way to turn <span class="inline-code">"WIN a FREE iPhone now!!!"</span> into a row of numbers.</p>
+
+<p><strong>TF-IDF</strong> = <em>Term Frequency × Inverse Document Frequency</em>. In plain language:</p>
+<ul>
+  <li><strong>TF</strong> rewards a word that appears many times in the message you are scoring. A message that says "free" five times cares about "free".</li>
+  <li><strong>IDF</strong> penalizes a word that appears in almost every message. "The", "a", "is" show up everywhere — they carry no signal.</li>
+  <li><strong>TF × IDF</strong> gives a high score to words that are common <em>in this message</em> and rare <em>across the corpus</em>. "Free" in a casual "hi mom how are you" message is nothing; "free" in a message that also has "winner" and "click" is everything.</li>
+</ul>
+
+<p>scikit-learn does the whole thing in one object:</p>
+
+<div class="file-header">src/training.py — vectorize_text</div>
+<pre><code>from sklearn.feature_extraction.text import TfidfVectorizer
+
+def vectorize_text(
+    X_train: pd.Series,
+    X_test: pd.Series,
+    *,
+    max_features: int = 2000,
+) -&gt; dict:
+    vectorizer = TfidfVectorizer(stop_words="english", max_features=max_features)
+    X_train_features = vectorizer.fit_transform(X_train)
+    X_test_features = vectorizer.transform(X_test)
+
+    return {
+        "vectorizer": vectorizer,
+        "X_train_features": X_train_features,
+        "X_test_features": X_test_features,
+        "train_shape": tuple(X_train_features.shape),
+        "test_shape": tuple(X_test_features.shape),
+        "vocabulary_size": int(len(vectorizer.vocabulary_)),
+    }</code></pre>
+
+<p>Two details that matter for understanding and for production:</p>
+<ul>
+  <li><strong><span class="inline-code">fit_transform</span> on train, <span class="inline-code">transform</span> on test.</strong> We <strong>never</strong> fit the vectorizer on the test set. If we did, the vocabulary would include words the model was never trained on, and our "held-out" accuracy would be a lie. The test set must be a stranger to everything in the pipeline.</li>
+  <li><strong><span class="inline-code">stop_words="english"</span> and <span class="inline-code">max_features=2000</span></strong> are two knobs. Stopwords remove the "the / is / a" noise. <span class="inline-code">max_features=2000</span> keeps only the 2,000 most informative tokens, which is enough for SMS and keeps the matrix small. These are reasonable defaults, not sacred values.</li>
+</ul>
+
+<p>After this step, <span class="inline-code">X_train_features</span> is a sparse matrix of shape <span class="inline-code">(4126, 2000)</span> — 4,126 training messages, each represented by a 2,000-dimensional TF-IDF vector.</p>
+
+<h2>8. Step 6 — Train Two Baseline Models and Compare</h2>
+
+<p>A single-model ML tutorial is a trap. You never know whether the number you got is good or bad without a reference. So we train two classic text classifiers and compare them:</p>
+
+<ul>
+  <li><strong>Logistic Regression</strong> — a linear model. For each word, learn a weight; sum the weights of the words present; squash through a sigmoid to get P(spam).</li>
+  <li><strong>Multinomial Naive Bayes</strong> — a probabilistic model. Estimate P(word | spam) and P(word | ham) from training counts, then use Bayes' rule at prediction time. Famous for being strong on text out of the box.</li>
+</ul>
+
+<div class="file-header">src/training.py — train_baseline_models</div>
+<pre><code>from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+
+def train_baseline_models(
+    X_train_features, X_test_features, y_train, y_test,
+) -&gt; dict:
+    if y_train.nunique() &lt; 2:
+        raise ValueError("Need at least 2 label classes to train.")
+
+    candidates = {
+        "logistic_regression": LogisticRegression(max_iter=1000, random_state=42),
+        "multinomial_nb": MultinomialNB(),
+    }
+
+    model_results, fitted_models = {}, {}
+    best_model, best_accuracy = None, -1.0
+
+    for name, model in candidates.items():
+        model.fit(X_train_features, y_train)
+        predictions = model.predict(X_test_features)
+        accuracy = float(accuracy_score(y_test, predictions))
+        model_results[name] = {
+            "accuracy": round(accuracy, 4),
+            "predictions": predictions.tolist(),
+        }
+        fitted_models[name] = model
+        if accuracy &gt; best_accuracy:
+            best_model, best_accuracy = name, accuracy
+
+    return {
+        "models": model_results,
+        "fitted_models": fitted_models,
+        "best_model": best_model,
+        "best_accuracy": round(best_accuracy, 4),
+    }</code></pre>
+
+<p>Results on the 80/20 stratified split:</p>
+
+<table>
+  <thead><tr><th>Model</th><th>Test accuracy</th></tr></thead>
+  <tbody>
+    <tr><td>Logistic Regression</td><td>0.9641</td></tr>
+    <tr><td><strong>Multinomial NB</strong></td><td><strong>0.9777</strong></td></tr>
+  </tbody>
+</table>
+
+<p>Naive Bayes wins by a hair. That is very on-brand for short-text spam — it has been the textbook baseline since the 1990s and it still holds up against a linear model on bag-of-words features.</p>
+
+<h2>9. Step 7 — Save the Artifacts</h2>
+
+<p>The orchestrator <span class="inline-code">train_classifier</span> wires all the layers together and <strong>saves everything we will need at inference time</strong>:</p>
+
+<div class="file-header">src/training.py — train_classifier</div>
+<pre><code>import json, joblib
+from pathlib import Path
+
+def train_classifier(input_csv: str, output_dir: str) -&gt; dict:
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    dataframe = load_training_data(input_csv)
+    labels = sorted(dataframe["label"].unique().tolist())
+    split = split_training_data(dataframe)
+    vec = vectorize_text(split["X_train"], split["X_test"])
+    models = train_baseline_models(
+        vec["X_train_features"], vec["X_test_features"],
+        split["y_train"], split["y_test"],
+    )
+
+    best = models["fitted_models"][models["best_model"]]
+
+    model_file = output_path / "best_model.joblib"
+    vectorizer_file = output_path / "vectorizer.joblib"
+    metrics_file = output_path / "metrics.json"
+
+    joblib.dump(best, model_file)
+    joblib.dump(vec["vectorizer"], vectorizer_file)
+    metrics_file.write_text(json.dumps({
+        "labels": labels,
+        "train_rows": split["train_rows"],
+        "test_rows": split["test_rows"],
+        "stratified": split["stratified"],
+        "vocabulary_size": vec["vocabulary_size"],
+        "model_scores": {n: {"accuracy": d["accuracy"]}
+                         for n, d in models["models"].items()},
+        "best_model": models["best_model"],
+        "best_accuracy": models["best_accuracy"],
+    }, indent=2), encoding="utf-8")
+
+    return {"status": "model_saved", ...}</code></pre>
+
+<div class="callout"><strong>The one thing most tutorials get wrong:</strong> you must save the vectorizer alongside the model. The model learned weights for feature <span class="inline-code">#417</span>. Feature <span class="inline-code">#417</span> only means "the word <em>won</em>" because the vectorizer's vocabulary said so. Load the model without the vectorizer and your predictions are random noise. They travel together, or they do not travel.</div>
+
+<h2>10. Step 8 — The Prediction Module</h2>
+
+<p><span class="inline-code">src/prediction.py</span> is intentionally small. It mirrors training as the inference side:</p>
+
+<div class="file-header">src/prediction.py</div>
+<pre><code>from pathlib import Path
+import joblib
+
+def load_artifacts(model_dir: str) -&gt; dict:
+    artifacts_path = Path(model_dir)
+    model_file = artifacts_path / "best_model.joblib"
+    vectorizer_file = artifacts_path / "vectorizer.joblib"
+
+    if not model_file.exists():
+        raise FileNotFoundError(f"Model file not found: {model_file}")
+    if not vectorizer_file.exists():
+        raise FileNotFoundError(f"Vectorizer file not found: {vectorizer_file}")
+
+    return {
+        "model": joblib.load(model_file),
+        "vectorizer": joblib.load(vectorizer_file),
+    }
+
+
+def predict_text(model_dir: str, text: str) -&gt; dict:
+    if not text or not text.strip():
+        raise ValueError("Input text must not be empty.")
+
+    artifacts = load_artifacts(model_dir)
+    features = artifacts["vectorizer"].transform([text])
+    prediction = artifacts["model"].predict(features)[0]
+
+    return {"model_dir": model_dir, "text": text, "prediction": str(prediction)}</code></pre>
+
+<p>Notice the order: <span class="inline-code">vectorizer.transform([text])</span> uses the <strong>same vocabulary</strong> the training data used, then <span class="inline-code">model.predict(features)</span> runs the exact classifier we trained. No <span class="inline-code">fit</span> anywhere. Inference is pure function application.</p>
+
+<h2>11. Step 9 — The CLI Entry Point</h2>
+
+<p>Same argparse pattern as Episode 2. Three subcommands: <span class="inline-code">train</span>, <span class="inline-code">evaluate</span>, <span class="inline-code">predict</span>.</p>
+
+<div class="file-header">src/cli.py</div>
+<pre><code>import argparse
+from src import predict_text, train_classifier
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="ai-workflow-ep3",
+        description="Decode AI Using AI — Episode 3: First ML Model",
+    )
+    subparsers = parser.add_subparsers(dest="command")
+
+    train_p = subparsers.add_parser("train")
+    train_p.add_argument("input")
+    train_p.add_argument("output")
+
+    predict_p = subparsers.add_parser("predict")
+    predict_p.add_argument("model")
+    predict_p.add_argument("text")
+
+    # ... evaluate subparser (placeholder for the next episode)
+
+    args = parser.parse_args()
+
+    if args.command == "train":
+        r = train_classifier(args.input, args.output)
+        print(f"Status:              {r['status']}")
+        print(f"Train rows:          {r['train_rows']}")
+        print(f"Logistic Regression: {r['model_scores']['logistic_regression']['accuracy']}")
+        print(f"Multinomial NB:      {r['model_scores']['multinomial_nb']['accuracy']}")
+        print(f"Best model:          {r['best_model']}")
+    elif args.command == "predict":
+        r = predict_text(args.model, args.text)
+        print(f"Prediction: {r['prediction']}")</code></pre>
+
+<p>End-to-end from a shell:</p>
+<pre><code>python -m src.cli train data/sms_spam_clean.csv data/artifacts
+python -m src.cli predict data/artifacts "WIN a FREE iPhone now!!! Click here"
+# → Prediction: spam</code></pre>
+
+<h2>12. Step 10 — Tests (All 15 of Them)</h2>
+
+<p>Fifteen tests across three files. They cover:</p>
+<ul>
+  <li><span class="inline-code">test_training.py</span>: <span class="inline-code">prepare_training_data</span> happy path, missing-column error, stratified split on a small fixture, TF-IDF shapes, two-model training returns a <span class="inline-code">best_model</span>, full <span class="inline-code">train_classifier</span> writes all three artifact files and produces <span class="inline-code">status="model_saved"</span>.</li>
+  <li><span class="inline-code">test_prediction.py</span>: <span class="inline-code">predict_text</span> returns <span class="inline-code">ham</span> or <span class="inline-code">spam</span> after training, raises <span class="inline-code">ValueError</span> on empty text, raises <span class="inline-code">FileNotFoundError</span> when the model directory does not contain artifacts.</li>
+  <li><span class="inline-code">test_cli.py</span>: <span class="inline-code">--help</span> works, <span class="inline-code">train</span> CLI prints the expected status and artifact paths, <span class="inline-code">predict</span> CLI (run after <span class="inline-code">train</span>) prints a <span class="inline-code">Prediction:</span> line, <span class="inline-code">evaluate</span> placeholder runs without crashing.</li>
+</ul>
+
+<p>A representative one — the end-to-end test that would have caught every bug we actually hit during development:</p>
+
+<div class="file-header">tests/test_training.py</div>
+<pre><code>def test_train_classifier_saves_artifacts(tmp_path):
+    raw = tmp_path / "sms.tsv"
+    raw.write_text(
+        "ham\they what's up\n"
+        "spam\twin a free iphone now\n"
+        "ham\tsee you at 5\n"
+        "spam\tclaim your prize today\n",
+        encoding="utf-8",
+    )
+    clean_csv = tmp_path / "clean.csv"
+    prepare_training_data(str(raw), str(clean_csv))
+
+    result = train_classifier(str(clean_csv), str(tmp_path / "artifacts"))
+
+    assert result["status"] == "model_saved"
+    assert Path(result["model_file"]).exists()
+    assert Path(result["vectorizer_file"]).exists()
+    assert Path(result["metrics_file"]).exists()
+    assert result["best_model"] in {"logistic_regression", "multinomial_nb"}</code></pre>
+
+<p><span class="inline-code">pytest -q</span> → <strong>15 passed</strong>.</p>
+
+<h2>13. Reality Check: 15 Real-World Messages</h2>
+
+<p>A held-out test accuracy of 97.77% looks glorious, but you have not really tested a model until you have fed it text your test set has never seen. So we did a sanity check: 15 hand-written modern messages, a mix of obvious spam, obvious ham, and borderline cases.</p>
+
+<table>
+  <thead>
+    <tr><th>#</th><th>Message (abbreviated)</th><th>Expected</th><th>Predicted</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>"Your bank alert: a $40 charge at Starbucks was authorized on your card."</td><td>ham</td><td class="hit">ham ✓</td></tr>
+    <tr><td>2</td><td>"CONGRATULATIONS! You've won a $1000 gift card. Click http://bit.ly/xyz to claim."</td><td>spam</td><td class="hit">spam ✓</td></tr>
+    <tr><td>3</td><td>"Hey, running 10 mins late, see you at the office."</td><td>ham</td><td class="hit">ham ✓</td></tr>
+    <tr><td>4</td><td>"URGENT: your account has been suspended. Verify immediately: http://secure-login-bank.co"</td><td>spam</td><td class="hit">spam ✓</td></tr>
+    <tr><td>5</td><td>"Interested in a senior backend role at Stripe? Happy to chat."</td><td>ham</td><td class="hit">ham ✓</td></tr>
+    <tr><td>6</td><td>"FREE PIZZA Friday at the office, come to the 4th floor kitchen at 12."</td><td>ham</td><td class="hit">ham ✓</td></tr>
+    <tr><td>7</td><td>"WhatsApp Gold is available now! Download the premium version before it's banned."</td><td>spam</td><td class="miss">ham ✗</td></tr>
+    <tr><td>8</td><td>"Mom, can you pick up milk on the way home?"</td><td>ham</td><td class="hit">ham ✓</td></tr>
+    <tr><td>…</td><td>(15 total)</td><td></td><td></td></tr>
+  </tbody>
+</table>
+
+<p><strong>Final score: 14 / 15 = 93%.</strong></p>
+
+<p>The one miss — the WhatsApp Gold message — is the single most educational moment of the whole episode. Why did it fail?</p>
+
+<p>Because our training data is <strong>SMS from 2002</strong>. The words <span class="inline-code">whatsapp</span>, <span class="inline-code">download</span>, <span class="inline-code">premium</span>, <span class="inline-code">banned</span>, and <span class="inline-code">gold</span> in this phishing sense simply do not exist in the UCI corpus. TF-IDF has no vocabulary entry for <span class="inline-code">whatsapp</span>. Logistic regression has no weight to pull. The model does the only thing it can do — score the message based on the words it <em>does</em> know, which here look pretty benign — and it says "ham".</p>
+
+<div class="callout"><strong>The lesson:</strong> model accuracy numbers describe the test set, not the world. A 97.77% test accuracy means "of the messages very similar to the ones I trained on, I get 97.77% right". The moment the input distribution shifts — new slang, new product names, a new type of scam — accuracy degrades silently.</div>
+
+<h2>14. Exercise vs Production: What We Did Not Do</h2>
+
+<p>We built this as a learning exercise. If we were shipping this to real users, here is what would be different. Worth listing explicitly, because the gap is where the real engineering lives.</p>
+
+<h3>Data</h3>
+<ul>
+  <li><strong>Exercise:</strong> one small labeled CSV, once.</li>
+  <li><strong>Production:</strong> continuous data collection, a proper labeling workflow (or active learning), class-imbalance handling (SMOTE, class weights, re-sampling), regular re-training as spam patterns evolve.</li>
+</ul>
+
+<h3>Splitting</h3>
+<ul>
+  <li><strong>Exercise:</strong> a single 80/20 stratified split with <span class="inline-code">random_state=42</span>.</li>
+  <li><strong>Production:</strong> <strong>k-fold cross-validation</strong> for stable accuracy estimates; a <strong>time-based split</strong> (train on older data, test on newer) to simulate concept drift; a hold-out set that is never touched until final acceptance.</li>
+</ul>
+
+<h3>Features</h3>
+<ul>
+  <li><strong>Exercise:</strong> TF-IDF with default tokenization, English stopwords, 2,000 features.</li>
+  <li><strong>Production:</strong> character n-grams (catches URL-obfuscated spam), domain-specific features (number of links, number of emojis, presence of phone numbers), possibly a pre-trained sentence embedding model as the feature layer.</li>
+</ul>
+
+<h3>Models</h3>
+<ul>
+  <li><strong>Exercise:</strong> logistic regression and multinomial naive Bayes, default hyperparameters, pick the one with higher test accuracy.</li>
+  <li><strong>Production:</strong> hyperparameter search (<span class="inline-code">GridSearchCV</span>, <span class="inline-code">RandomizedSearchCV</span>, or Optuna), calibrated probabilities, threshold tuning for a target precision/recall, ensembling, and a fallback rule-based layer for high-risk decisions.</li>
+</ul>
+
+<h3>Metrics</h3>
+<ul>
+  <li><strong>Exercise:</strong> accuracy.</li>
+  <li><strong>Production:</strong> <strong>precision, recall, F1, PR-AUC, confusion matrix</strong>, cost-weighted metrics (flagging a real message as spam is much worse than letting spam through, or vice versa, depending on product). Accuracy on an 87/13 class split is borderline useless by itself.</li>
+</ul>
+
+<h3>Serving</h3>
+<ul>
+  <li><strong>Exercise:</strong> <span class="inline-code">joblib.load</span> a pickle in a CLI.</li>
+  <li><strong>Production:</strong> a versioned model registry, a feature store so the same transforms run at train and serve time, a stateless inference service (FastAPI + uvicorn), health checks, request/response logging, latency budgets.</li>
+</ul>
+
+<h3>Monitoring</h3>
+<ul>
+  <li><strong>Exercise:</strong> a pytest suite.</li>
+  <li><strong>Production:</strong> data-drift and prediction-drift monitoring, shadow deployments, A/B tests, alerting when the daily spam rate deviates from expectation, periodic ground-truth sampling to catch silent degradation (our WhatsApp Gold miss, at scale).</li>
+</ul>
+
+<h3>Orchestration</h3>
+<ul>
+  <li><strong>Exercise:</strong> <span class="inline-code">python -m src.cli train ...</span> from a Makefile.</li>
+  <li><strong>Production:</strong> a DAG in Airflow / Prefect / Dagster that cleans, trains, evaluates, promotes to the registry, and emits metrics on a schedule. Triggered by data landing, not by a human.</li>
+</ul>
+
+<p>You do not need any of that today. You need to understand that everything we <em>did</em> build maps to a box in that bigger diagram. When someone later says "add cross-validation", you will know exactly which line to change.</p>
+
+<h2>15. Glossary</h2>
+
+<p>Plain-English definitions of every term this episode uses.</p>
+
+<dl>
+  <dt>Classifier</dt><dd>A model that takes an input and assigns it a discrete label. Here: a message → <span class="inline-code">ham</span> or <span class="inline-code">spam</span>.</dd>
+  <dt>Supervised learning</dt><dd>Training on examples where the correct label is known.</dd>
+  <dt>Ham / Spam</dt><dd>The two labels in the SMS Spam Collection. <em>Ham</em> is the term of art for "not spam".</dd>
+  <dt>Training set</dt><dd>The rows the model learns from.</dd>
+  <dt>Test set</dt><dd>Rows the model has never seen, used once at the end to estimate real-world performance.</dd>
+  <dt>Train/test split</dt><dd>The act of partitioning a labeled dataset into training and test sets.</dd>
+  <dt>Stratified split</dt><dd>A split that preserves the class ratio in both parts. Prevents a bad random draw from hiding all the spam in the training set.</dd>
+  <dt>random_state</dt><dd>A seed for the random number generator. Fixing it makes random operations reproducible.</dd>
+  <dt>Feature</dt><dd>A numeric input the model consumes. Here, each TF-IDF column is one feature.</dd>
+  <dt>Feature engineering</dt><dd>The craft of turning raw inputs (text, timestamps, categories) into useful numeric features.</dd>
+  <dt>Bag of words</dt><dd>Representing a document as the multiset of its words, ignoring order. The base representation behind TF-IDF.</dd>
+  <dt>TF-IDF</dt><dd><em>Term Frequency × Inverse Document Frequency</em>. Scores a word higher when it is frequent in one document and rare across the corpus.</dd>
+  <dt>Stopwords</dt><dd>Very common words (<em>the</em>, <em>is</em>, <em>a</em>) removed because they carry no signal.</dd>
+  <dt>Vocabulary</dt><dd>The sorted set of tokens the vectorizer has learned from the training data. Each vocabulary entry is one feature column.</dd>
+  <dt>Sparse matrix</dt><dd>A matrix where almost all entries are zero, stored compactly. A typical SMS has a handful of words against a 2,000-word vocabulary → 99% zeros.</dd>
+  <dt>.fit()</dt><dd>Learn something from the training data (vocabulary for a vectorizer; weights for a model).</dd>
+  <dt>.transform()</dt><dd>Apply what was learned to new data. Does not update internal state.</dd>
+  <dt>.fit_transform()</dt><dd>Shortcut for <span class="inline-code">fit</span> then <span class="inline-code">transform</span> on the same data. Only valid on the <strong>training</strong> set.</dd>
+  <dt>.predict()</dt><dd>Produce labels for new inputs using the already-fitted model.</dd>
+  <dt>Logistic regression</dt><dd>A linear classifier that predicts the log-odds of a class as a weighted sum of features, then squashes to a probability with the sigmoid function.</dd>
+  <dt>Multinomial naive Bayes</dt><dd>A probabilistic text classifier that assumes word occurrences are conditionally independent given the class. Surprisingly strong baseline for short text.</dd>
+  <dt>Baseline model</dt><dd>A simple model you train first to set a floor for performance. Any fancier approach must beat it.</dd>
+  <dt>Accuracy</dt><dd>Fraction of predictions that are correct. Easy to compute, misleading on imbalanced data.</dd>
+  <dt>Precision</dt><dd>Of the items we predicted positive, how many actually are. (Next episode's topic.)</dd>
+  <dt>Recall</dt><dd>Of the items that actually are positive, how many we caught.</dd>
+  <dt>F1</dt><dd>Harmonic mean of precision and recall.</dd>
+  <dt>Confusion matrix</dt><dd>A 2×2 (or N×N) grid of true vs predicted labels. Tells you <em>what kind</em> of mistakes the model makes.</dd>
+  <dt>Overfitting</dt><dd>The model memorizes the training set instead of generalizing. High train accuracy, low test accuracy.</dd>
+  <dt>Underfitting</dt><dd>The model is too simple to capture the signal. Low accuracy on both train and test.</dd>
+  <dt>Concept drift / data drift</dt><dd>The real-world distribution changes over time (new slang, new scam formats). Yesterday's model degrades without code changing.</dd>
+  <dt>joblib</dt><dd>A lightweight serializer from the scikit-learn ecosystem. Faster than <span class="inline-code">pickle</span> for NumPy arrays; used here to save the model and vectorizer.</dd>
+  <dt>Artifact</dt><dd>A file produced by a pipeline step that downstream steps (or production) consume. Here: <span class="inline-code">best_model.joblib</span>, <span class="inline-code">vectorizer.joblib</span>, <span class="inline-code">metrics.json</span>.</dd>
+  <dt>Pipeline</dt><dd>A sequence of transformations and a final estimator, chained so that <span class="inline-code">fit</span> and <span class="inline-code">transform</span> flow in order. We built ours by hand; scikit-learn also has <span class="inline-code">sklearn.pipeline.Pipeline</span>.</dd>
+  <dt>k-fold cross-validation</dt><dd>Split the data into <em>k</em> parts, train on <em>k−1</em> and test on the remaining one, rotate <em>k</em> times, average the scores. Much more stable than a single split.</dd>
+  <dt>Hyperparameter</dt><dd>A knob you set <em>before</em> training (<span class="inline-code">max_iter</span>, <span class="inline-code">max_features</span>, <span class="inline-code">test_size</span>). Contrasts with parameters the model learns itself.</dd>
+</dl>
+
+<div class="conclusion">
+<h3 style="margin-top:0">Wrapping Up</h3>
+
+<p>In Episode 3 we built our first end-to-end classifier:</p>
+<ol>
+  <li><strong>Data with a license.</strong> The UCI SMS Spam Collection, downloaded, unzipped, and cleaned to 5,158 deduplicated rows.</li>
+  <li><strong>A cleaning pipeline</strong> that collapses whitespace, normalizes labels, and drops empties and duplicates.</li>
+  <li><strong>A stratified 80/20 split</strong> with an explicit safety net for the small-dataset edge cases that show up in tests.</li>
+  <li><strong>TF-IDF vectorization</strong> with English stopwords and a 2,000-feature cap, fit on train and applied to test.</li>
+  <li><strong>Two baseline models</strong> — logistic regression and multinomial naive Bayes — trained side by side; NB wins at <strong>0.9777</strong> test accuracy.</li>
+  <li><strong>Serialized artifacts</strong> — model, vectorizer, and metrics — written together so inference is reproducible.</li>
+  <li><strong>A small prediction module</strong> that validates input, reuses the saved vectorizer, and returns a label.</li>
+  <li><strong>A CLI</strong> with <span class="inline-code">train</span>, <span class="inline-code">predict</span>, and a placeholder <span class="inline-code">evaluate</span> subcommand.</li>
+  <li><strong>15 passing tests</strong> covering every layer.</li>
+  <li><strong>A real-world sanity check</strong> — 14/15 correct on hand-written modern messages, with one miss that perfectly illustrates why held-out accuracy is not the same as production accuracy.</li>
+</ol>
+
+<p>The exercise is small. The skeleton is the same one every production text-classification system has. When you read the next paper or the next service's model card, you will recognize every noun. That is the whole point of building from scratch.</p>
+
+<p>Next up: Episode 4 — proper evaluation metrics (precision, recall, F1, confusion matrix), a Jinja-rendered evaluation report, and the first honest answer to the question "is this model actually good enough to ship?"</p>
+
+<p style="margin-bottom:0"><strong>AI is as good as our knowledge.</strong></p>
+</div>
+
+<div class="footer">
+Episode 3 of <em>Learn AI by Doing It</em> · Pragna Mohapatra
+</div>
+
+</div>
+</body>
+</html>

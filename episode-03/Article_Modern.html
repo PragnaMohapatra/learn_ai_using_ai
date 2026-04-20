@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Episode 3 — Learn AI by Doing It: Your First ML Model</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1020;
+    --bg-soft:#111834;
+    --panel:#0f1530;
+    --panel-2:#141c3a;
+    --border:#1f2a52;
+    --text:#e6ebff;
+    --muted:#9aa6c7;
+    --accent:#7c5cff;       /* violet */
+    --accent-2:#22d3ee;     /* cyan */
+    --accent-3:#f472b6;     /* pink */
+    --success:#34d399;
+    --warn:#fbbf24;
+    --danger:#f87171;
+    --code-bg:#0a0f22;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.18), transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, rgba(34,211,238,.14), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    line-height:1.75;
+    font-size:17px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:64px 24px 96px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--accent-2);
+    padding:6px 12px;border:1px solid var(--border);border-radius:999px;
+    background:rgba(34,211,238,.06);
+  }
+  h1{
+    font-size:clamp(2rem,4.2vw,3rem);font-weight:800;letter-spacing:-.02em;
+    margin:18px 0 10px;line-height:1.15;
+    background:linear-gradient(90deg,#fff 0%,#c9d2ff 60%,#7c5cff 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .lede{font-size:1.2rem;color:var(--muted);margin-bottom:28px}
+  .meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:.92rem;margin-bottom:40px}
+  .meta a{color:var(--accent-2);text-decoration:none}
+  .meta a:hover{text-decoration:underline}
+
+  h2{
+    font-size:1.7rem;font-weight:700;letter-spacing:-.01em;
+    margin:56px 0 14px;padding-top:16px;border-top:1px solid var(--border);
+  }
+  h2 .num{
+    font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--accent);
+    margin-right:10px;
+  }
+  h3{font-size:1.2rem;font-weight:600;margin:28px 0 10px;color:#dde4ff}
+  h4{font-size:1rem;font-weight:600;margin:20px 0 8px;color:#c6cff0;font-family:'JetBrains Mono',monospace}
+  p{margin:0 0 14px;color:#d6deff}
+  p strong, li strong{color:#fff}
+  a{color:var(--accent-2)}
+  ul,ol{margin:10px 0 16px 22px}
+  li{margin-bottom:6px}
+
+  /* Code */
+  code{font-family:'JetBrains Mono',monospace;font-size:.88em}
+  p code, li code, td code{
+    background:rgba(124,92,255,.12);
+    color:#d8ccff;
+    padding:2px 7px;border-radius:5px;border:1px solid rgba(124,92,255,.24);
+  }
+  pre{
+    background:var(--code-bg);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:18px 20px;
+    overflow-x:auto;
+    margin:14px 0 20px;
+    font-size:.88rem;line-height:1.6;
+    position:relative;
+    box-shadow:0 10px 30px -15px rgba(0,0,0,.6);
+  }
+  pre code{color:#d8ddff;background:transparent;border:0;padding:0}
+  .file-header{
+    display:flex;align-items:center;gap:10px;
+    background:var(--panel-2);border:1px solid var(--border);border-bottom:0;
+    padding:10px 14px;border-radius:12px 12px 0 0;
+    font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#aab3dc;margin-top:18px;
+  }
+  .file-header::before{
+    content:"";width:10px;height:10px;border-radius:50%;
+    background:var(--accent);box-shadow:16px 0 0 0 var(--warn),32px 0 0 0 var(--success);
+    margin-right:28px;
+  }
+  .file-header + pre{margin-top:0;border-radius:0 0 12px 12px}
+
+  /* Cards / callouts */
+  .callout{
+    border:1px solid var(--border);border-left:3px solid var(--accent);
+    background:linear-gradient(180deg, rgba(124,92,255,.08), rgba(124,92,255,0));
+    padding:14px 18px;border-radius:10px;margin:18px 0;color:#dde4ff;
+  }
+  .callout.q{border-left-color:var(--accent-2);background:linear-gradient(180deg,rgba(34,211,238,.08),rgba(34,211,238,0))}
+  .callout.warn{border-left-color:var(--warn);background:linear-gradient(180deg,rgba(251,191,36,.08),rgba(251,191,36,0))}
+  .callout.success{border-left-color:var(--success);background:linear-gradient(180deg,rgba(52,211,153,.08),rgba(52,211,153,0))}
+  .callout strong{color:#fff}
+
+  /* Table of contents */
+  .toc{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:14px;padding:22px 26px;margin:28px 0 8px;
+  }
+  .toc .title{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--accent-2);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+  .toc ol{counter-reset:toc;list-style:none;margin:0;padding:0;column-count:2;column-gap:28px}
+  .toc ol li{counter-increment:toc;position:relative;padding-left:32px;margin-bottom:8px;color:#c6cff0;break-inside:avoid}
+  .toc ol li::before{
+    content:counter(toc,decimal-leading-zero);
+    position:absolute;left:0;top:2px;
+    font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--accent);
+  }
+  @media (max-width:600px){.toc ol{column-count:1}}
+
+  /* Tables */
+  table{width:100%;border-collapse:separate;border-spacing:0;margin:18px 0;font-size:.92rem;
+    border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+  th{background:var(--panel-2);color:#d8ddff;font-weight:600;font-family:'JetBrains Mono',monospace;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+  tr:last-child td{border-bottom:0}
+  td code{background:rgba(34,211,238,.10);color:#bff0ff;border-color:rgba(34,211,238,.2)}
+  .hit{color:var(--success);font-weight:600}
+  .miss{color:var(--danger);font-weight:700}
+
+  /* Glossary */
+  dl{display:grid;gap:14px;margin:16px 0}
+  dt{font-family:'JetBrains Mono',monospace;color:var(--accent-2);font-weight:600}
+  dd{margin-left:0;color:#d6deff}
+
+  /* Math block */
+  .math{
+    background:var(--code-bg);border:1px solid var(--border);border-radius:10px;
+    padding:14px 18px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:.92rem;color:#e6ebff;overflow-x:auto;
+  }
+  .math .var{color:var(--accent-2)}
+  .math .num{color:var(--accent-3)}
+  .math .op{color:var(--muted)}
+
+  /* Pills */
+  .pill{
+    display:inline-block;padding:2px 10px;border-radius:999px;
+    font-family:'JetBrains Mono',monospace;font-size:.75rem;
+    border:1px solid var(--border);background:var(--panel-2);color:#cbd3f5;
+    margin-right:6px;
+  }
+  .pill.good{color:#a7f3d0;border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
+  .pill.bad{color:#fecaca;border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.08)}
+  .pill.warn{color:#fde68a;border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)}
+
+  .conclusion{
+    margin-top:40px;
+    border:1px solid var(--border);border-radius:14px;
+    padding:24px 26px;
+    background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(34,211,238,.06));
+  }
+  .conclusion h3{margin-top:0}
+  .footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.9rem;text-align:center}
+
+  ::-webkit-scrollbar{height:10px;width:10px}
+  ::-webkit-scrollbar-thumb{background:#2a366a;border-radius:10px}
+  ::-webkit-scrollbar-thumb:hover{background:#3a4a90}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="eyebrow">Episode 03 · Learn AI by Doing It</span>
+  <h1>Your First ML Model, Built From Scratch</h1>
+  <p class="lede">Train a spam classifier with scikit-learn — and pop the hood on every single number the model uses to make a prediction.</p>
+  <div class="meta">
+    <span>By Pragna Mohapatra</span>
+    <span>·</span>
+    <span>~18 min read</span>
+    <span>·</span>
+    <a href="https://github.com/PragnaMohapatra/learn_ai_using_ai/tree/main/episode-03">View source on GitHub →</a>
+  </div>
+
+  <!-- INTRO -->
+  <h2><span class="num">§0</span>Why DIY Projects in the Age of AI</h2>
+  <p>Large language models write production code, generate test suites, and draft documentation in seconds. Deep mastery of one framework is no longer the differentiator. <strong>Knowing what to ask for</strong> — and understanding the code the AI hands back — is.</p>
+  <p>Episode 1 ingested and cleaned raw data. Episode 2 profiled it and layered on an opt-in AI narrative. Episode 3 takes the next step: <strong>we train our first real ML model</strong>. A spam classifier. No deep learning. No GPU. Just <code>pandas</code>, <code>scikit-learn</code>, and the discipline of building one layer at a time so every function earns its place.</p>
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="title">What We'll Cover</div>
+    <ol>
+      <li>Why start with a classifier</li>
+      <li>Project structure</li>
+      <li>Docker &amp; infrastructure</li>
+      <li>Get real, licensed data</li>
+      <li>Load &amp; clean the labeled dataset</li>
+      <li>Train/test split &amp; stratification</li>
+      <li>TF-IDF: text → numbers</li>
+      <li>Two baseline models, side-by-side</li>
+      <li>Save the artifacts</li>
+      <li>The prediction module</li>
+      <li>The CLI entry point</li>
+      <li>Tests (all 15 of them)</li>
+      <li><strong>Under the hood: the math, end-to-end</strong></li>
+      <li>Reality check: 15 real-world messages</li>
+      <li>Exercise vs production</li>
+      <li>Glossary</li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <h2><span class="num">§1</span>Why Start with a Classifier</h2>
+  <p>Classification is the "hello world" of supervised ML. Inputs (messages, reviews, emails) → labels (<span class="pill good">ham</span><span class="pill bad">spam</span>, positive/negative, fraud/legit). The full pipeline that powers much larger systems — data loading, feature engineering, train/test discipline, model selection, serialization, inference — is already present in the smallest classifier.</p>
+  <p>Build a spam classifier properly and the shape of the code carries straight to a next-token predictor, a review scorer, or a churn model. Only the math inside one call to <code>.fit()</code> changes.</p>
+
+  <!-- 2 -->
+  <h2><span class="num">§2</span>Project Structure</h2>
+<pre><code>episode-03/
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── requirements.txt
+├── README.md
+├── src/
+│   ├── __init__.py
+│   ├── cli.py
+│   ├── training.py
+│   └── prediction.py
+├── tests/
+│   ├── test_cli.py
+│   ├── test_training.py
+│   └── test_prediction.py
+├── templates/
+└── data/
+    ├── SMSSpamCollection       # raw
+    ├── sms_spam_clean.csv      # cleaned
+    └── artifacts/
+        ├── best_model.joblib
+        ├── vectorizer.joblib
+        └── metrics.json</code></pre>
+  <p>No notebook, no dashboard, no model checked into git. The deliverables are reproducible artifacts in <code>data/artifacts/</code>.</p>
+
+  <!-- 3 -->
+  <h2><span class="num">§3</span>Docker &amp; Infrastructure</h2>
+  <p>Same pattern as Episode 2. Docker is not ceremony — it is how a collaborator six months from now gets the same NumPy version that produced your 97% accuracy.</p>
+
+  <div class="file-header">Dockerfile</div>
+<pre><code>FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/workspace:/workspace/episode-03
+
+WORKDIR /workspace/episode-03
+
+COPY episode-03/requirements.txt /tmp/requirements.txt
+RUN python -m pip install --upgrade pip &amp;&amp; \
+    pip install -r /tmp/requirements.txt
+
+COPY shared/ /workspace/shared/
+COPY episode-03/ /workspace/episode-03/
+
+ENTRYPOINT ["python", "-m", "src.cli"]
+CMD ["--help"]</code></pre>
+
+  <div class="file-header">docker-compose.yml</div>
+<pre><code>services:
+  cli:
+    build:
+      context: ..
+      dockerfile: episode-03/Dockerfile
+    container_name: decode-ai-episode-03-cli
+    working_dir: /workspace/episode-03
+    environment:
+      PYTHONPATH: /workspace:/workspace/episode-03
+    volumes:
+      - ./:/workspace/episode-03
+      - ../shared:/workspace/shared:ro
+      - ../episode-01/data:/workspace/episode-01/data:ro
+      - ../episode-02/data:/workspace/episode-02/data:ro
+    command: ["--help"]</code></pre>
+
+  <div class="file-header">requirements.txt</div>
+<pre><code>pandas==2.2.3
+scikit-learn==1.5.2
+joblib==1.4.2
+jinja2==3.1.4
+pytest==8.3.5</code></pre>
+
+  <!-- 4 -->
+  <h2><span class="num">§4</span>Get Real, Licensed Data</h2>
+  <p>Toy datasets teach toy lessons. We grab the <strong>UCI SMS Spam Collection</strong> (CC BY 4.0):</p>
+<pre><code>curl -L -o data/sms_spam_collection.zip \
+  https://archive.ics.uci.edu/static/public/228/sms+spam+collection.zip
+unzip data/sms_spam_collection.zip -d data/</code></pre>
+  <p>Tab-separated, two columns: <code>label</code> (<code>ham</code>/<code>spam</code>) and <code>text</code>. 5,574 messages. ~13% spam. Real UK SMS traffic.</p>
+  <div class="callout warn"><strong>Heads up:</strong> this dataset is from 2002. No WhatsApp, no PayPal, no crypto. A model trained on it is a time capsule — fine for learning, dangerous for shipping. We revisit this in §14.</div>
+
+  <!-- 5 -->
+  <h2><span class="num">§5</span>Load &amp; Clean the Labeled Dataset</h2>
+  <div class="file-header">src/training.py — clean_training_dataframe</div>
+<pre><code>REQUIRED_COLUMNS = {"text", "label"}
+
+def clean_training_dataframe(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
+    missing_columns = REQUIRED_COLUMNS - set(dataframe.columns)
+    if missing_columns:
+        raise ValueError(
+            f"Training dataset is missing required columns: "
+            f"{', '.join(sorted(missing_columns))}"
+        )
+
+    cleaned = dataframe.loc[:, ["text", "label"]].copy()
+    cleaned["text"] = (
+        cleaned["text"].fillna("").astype(str)
+        .str.replace(r"\s+", " ", regex=True).str.strip()
+    )
+    cleaned["label"] = cleaned["label"].astype("string").str.strip().str.lower()
+    cleaned = cleaned[
+        (cleaned["text"] != "")
+        &amp; cleaned["label"].notna()
+        &amp; (cleaned["label"] != "")
+    ]
+    cleaned = cleaned.drop_duplicates(subset=["text", "label"]).reset_index(drop=True)
+    if cleaned.empty:
+        raise ValueError("Training dataset has no usable rows after cleaning.")
+    return cleaned</code></pre>
+  <p>Validate columns · collapse whitespace · lowercase labels · drop empties &amp; exact duplicates. After dedup we go from 5,574 rows to <strong>5,158</strong>.</p>
+
+  <!-- 6 -->
+  <h2><span class="num">§6</span>Train/Test Split &amp; Stratification</h2>
+  <div class="callout q"><strong>"What is <code>stratify</code> doing, exactly?"</strong><br>On a dataset that is 87% ham / 13% spam, a random 80/20 split can — by bad luck — produce a test set that is 95% ham. Your "accuracy" then just rewards predicting ham always. Stratification <em>preserves the class ratio in both splits</em>.</div>
+  <div class="callout q"><strong>"And <code>random_state</code>?"</strong><br>A seed for the RNG. Fixing it makes the random split reproducible across runs.</div>
+  <div class="callout q"><strong>"What does <code>.fit()</code> actually do?"</strong><br>Vectorizer → scans training text, builds the vocabulary, computes document frequencies. Model → learns parameters (weights / probabilities). <code>.transform()</code> and <code>.predict()</code> just <em>apply</em> what was learned.</div>
+
+  <div class="file-header">src/training.py — split_training_data</div>
+<pre><code>from math import ceil
+from sklearn.model_selection import train_test_split
+
+DEFAULT_TEST_SIZE = 0.2
+DEFAULT_RANDOM_STATE = 42
+
+def split_training_data(dataframe, *, test_size=DEFAULT_TEST_SIZE,
+                       random_state=DEFAULT_RANDOM_STATE):
+    X, y = dataframe["text"], dataframe["label"]
+    stratify = None
+    class_count = int(y.nunique())
+    test_rows = ceil(len(dataframe) * test_size)
+    train_rows = len(dataframe) - test_rows
+    if (class_count &gt; 1 and y.value_counts().min() &gt;= 2
+        and test_rows &gt;= class_count and train_rows &gt;= class_count):
+        stratify = y
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state, stratify=stratify)
+    return {"X_train": X_train, "X_test": X_test,
+            "y_train": y_train, "y_test": y_test,
+            "stratified": stratify is not None}</code></pre>
+
+  <!-- 7 -->
+  <h2><span class="num">§7</span>TF-IDF: Text → Numbers</h2>
+  <p>Models do not read English. They consume vectors of floats. <strong>TF-IDF</strong> = <em>Term Frequency × Inverse Document Frequency</em>:</p>
+  <ul>
+    <li><strong>TF</strong> — a word that appears often in <em>this</em> message gets a higher score.</li>
+    <li><strong>IDF</strong> — a word that appears in almost every message ("the", "is") gets downweighted.</li>
+    <li><strong>TF × IDF</strong> — high when a word is frequent here but rare across the corpus.</li>
+  </ul>
+
+  <div class="file-header">src/training.py — vectorize_text</div>
+<pre><code>from sklearn.feature_extraction.text import TfidfVectorizer
+
+def vectorize_text(X_train, X_test, *, max_features=2000):
+    vectorizer = TfidfVectorizer(stop_words="english", max_features=max_features)
+    X_train_features = vectorizer.fit_transform(X_train)   # learn + apply
+    X_test_features  = vectorizer.transform(X_test)        # apply only
+    return {"vectorizer": vectorizer,
+            "X_train_features": X_train_features,
+            "X_test_features": X_test_features}</code></pre>
+  <div class="callout"><strong>Golden rule:</strong> <code>fit_transform</code> on train, <code>transform</code> on test. If you <code>fit</code> on test, your "held-out" accuracy is a lie — the vocabulary has already seen the answers.</div>
+
+  <!-- 8 -->
+  <h2><span class="num">§8</span>Two Baseline Models, Side-by-Side</h2>
+  <p>Never train one model. You cannot tell whether the number you got is good without a reference.</p>
+  <ul>
+    <li><strong>Logistic Regression</strong> — linear weights per word; sum them; squash with sigmoid → P(spam).</li>
+    <li><strong>Multinomial Naive Bayes</strong> — estimate P(word&nbsp;|&nbsp;spam) from counts; apply Bayes' rule at predict time.</li>
+  </ul>
+
+  <table>
+    <thead><tr><th>Model</th><th>Test accuracy</th></tr></thead>
+    <tbody>
+      <tr><td>Logistic Regression</td><td><code>0.9641</code></td></tr>
+      <tr><td><strong>Multinomial NB</strong></td><td><code><strong>0.9777</strong></code> <span class="pill good">winner</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- 9 -->
+  <h2><span class="num">§9</span>Save the Artifacts</h2>
+  <div class="file-header">src/training.py — train_classifier (end)</div>
+<pre><code>joblib.dump(best_model_obj,  output_path / "best_model.joblib")
+joblib.dump(vec["vectorizer"], output_path / "vectorizer.joblib")
+metrics_file.write_text(json.dumps(metrics, indent=2))</code></pre>
+  <div class="callout warn"><strong>The thing most tutorials get wrong:</strong> save the vectorizer <em>with</em> the model. Feature <code>#417</code> means "the word <em>won</em>" only because the vectorizer's vocabulary says so. Load the model without the vectorizer and your predictions are random noise.</div>
+
+  <!-- 10 -->
+  <h2><span class="num">§10</span>The Prediction Module</h2>
+  <div class="file-header">src/prediction.py</div>
+<pre><code>def load_artifacts(model_dir):
+    p = Path(model_dir)
+    return {"model": joblib.load(p / "best_model.joblib"),
+            "vectorizer": joblib.load(p / "vectorizer.joblib")}
+
+def predict_text(model_dir, text):
+    if not text or not text.strip():
+        raise ValueError("Input text must not be empty.")
+    a = load_artifacts(model_dir)
+    features = a["vectorizer"].transform([text])   # same vocabulary as training
+    return {"prediction": str(a["model"].predict(features)[0])}</code></pre>
+
+  <!-- 11 -->
+  <h2><span class="num">§11</span>The CLI Entry Point</h2>
+<pre><code>python -m src.cli train   data/sms_spam_clean.csv data/artifacts
+python -m src.cli predict data/artifacts "WIN a FREE iPhone now!!! Click here"
+# → Prediction: spam</code></pre>
+
+  <!-- 12 -->
+  <h2><span class="num">§12</span>Tests — All 15 of Them</h2>
+  <p>15 tests across <code>test_training.py</code>, <code>test_prediction.py</code>, <code>test_cli.py</code>. Happy paths, empty-text errors, missing-artifact errors, CLI subprocess integration. <code>pytest -q</code> → <strong>15 passed</strong>.</p>
+
+  <!-- ================================================================ -->
+  <!-- 13 — UNDER THE HOOD -->
+  <!-- ================================================================ -->
+  <h2><span class="num">§13</span>Under the Hood: The Math, End-to-End</h2>
+  <p>Everything up to here is plumbing. This section is the payoff: we take one real test message and walk it through every number the model touches — <strong>TF-IDF storage, the fitted model's internal state, the Bayes rule computation, and the final probability</strong>. Every value below is copy-pasted from a real run on the trained model.</p>
+
+  <h3>13.1 &nbsp; How TF-IDF Is Stored</h3>
+  <p>After <code>vectorizer.fit_transform(X_train)</code>, the returned object is a <strong>sparse CSR matrix</strong> — not a dense NumPy array. Here is what it looks like for our 4,126 training messages:</p>
+
+  <div class="math">
+  X_train_features.shape <span class="op">=</span> <span class="num">(4126, 2000)</span>     <span class="op">#  4126 rows · 2000 features</span><br>
+  X_train_features.dtype <span class="op">=</span> <span class="var">float64</span><br>
+  type <span class="op">=</span> scipy.sparse.csr_matrix<br>
+  non-zero entries <span class="op">=</span> <span class="num">25,070</span>     <span class="op">#  out of 4126 × 2000 = 8,252,000</span><br>
+  density <span class="op">=</span> <span class="num">0.00304</span>     <span class="op">#  ~0.3% filled — 99.7% zeros</span>
+  </div>
+
+  <p>If we stored 8.25M floats in a dense matrix we would burn 66 MB of RAM for a dataset that barely needs 200 KB. Sparse storage keeps only the non-zero <code>(row, col, value)</code> triples. CSR (Compressed Sparse Row) goes further — it groups values by row so <code>matrix[i]</code> is an O(1) slice, which is exactly what scikit-learn needs to iterate during <code>.fit()</code>.</p>
+
+  <h3>13.2 &nbsp; What the Vectorized Data Actually Looks Like</h3>
+  <p>Pick one real training row. Here is the original text and every non-zero TF-IDF value the vectorizer produced for it:</p>
+
+  <div class="file-header">X_train_features[0] — raw text + non-zero features</div>
+<pre><code>text:
+  "Sorry i cant take your call right now. It so happens that there r 2waxsto
+   do wat you want. She can come and ill get her..."
+
+non-zero features (23 out of 2000):
+  idx   token          tf-idf
+  ----  -----------    -------
+   119  able           0.1534
+   233  basic          0.1858
+   350  care           0.1267
+   413  come           0.0998
+   471  currently      0.1622
+   507  deliver        0.1858
+   703  friday         0.1669
+   774  guide          0.1763
+   794  happens        0.1727
+   875  ill            0.1379
+   898  insurance      0.5575   ← highest (rare word → high IDF)
+   945  just           0.0868
+  1027  ll             0.1935
+  1106  medical        0.3527
+  1157  morning        0.1263
+  1288  person         0.1420
+  1369  person         0.1420
+  1462  right          0.3662
+  1550  shopping       0.1411
+  1613  sorry          0.1135
+  1735  thats          0.1372
+  1756  til            0.1459
+  1885  want           0.1021
+  1894  wat            0.1166
+  1930  win            —   (absent in this message)
+  ...
+  1,977 other features = 0.0
+</code></pre>
+
+  <p>Notice two things. First, <strong>the vast majority of columns are zero</strong>. Second, <code>insurance</code> gets the highest weight (<code>0.5575</code>) not because it appears many times — it appears once — but because it is <em>rare across the corpus</em>. IDF is doing its job.</p>
+
+  <h3>13.3 &nbsp; What the Fitted Model Looks Like</h3>
+  <p>After <code>model.fit(X_train_features, y_train)</code>, the Multinomial Naive Bayes object stores three things:</p>
+
+  <div class="math">
+  nb.classes_            <span class="op">=</span> [<span class="var">'ham'</span>, <span class="var">'spam'</span>]<br>
+  nb.class_log_prior_    <span class="op">=</span> [<span class="num">-0.1330</span>, <span class="num">-2.0828</span>]<br>
+  nb.feature_log_prob_   <span class="op">=</span> array of shape <span class="num">(2, 2000)</span>     <span class="op"># log P(word | class)</span>
+  </div>
+
+  <p>The priors reverse-engineer to:</p>
+
+  <div class="math">
+  P(ham)  <span class="op">=</span> exp(-0.1330) <span class="op">=</span> <span class="num">0.875</span>     <span class="op"># 87.5% of training = ham</span><br>
+  P(spam) <span class="op">=</span> exp(-2.0828) <span class="op">=</span> <span class="num">0.125</span>     <span class="op"># 12.5% of training = spam</span>
+  </div>
+
+  <p><code>feature_log_prob_</code> is the real meat: for every (class, word) pair, the log probability of seeing that word given that class. We'll use it in §13.5.</p>
+
+  <h3>13.4 &nbsp; A Test Message Meets the Vectorizer</h3>
+  <p>Let's run a fresh message through the exact same vectorizer — <strong>using <code>.transform()</code>, never <code>.fit_transform()</code></strong>:</p>
+
+  <div class="math">
+  text <span class="op">=</span> <span class="var">"WIN a FREE iPhone now!!! Click http://bit.ly/xyz to claim your prize"</span>
+  </div>
+
+  <p>Three things happen in order: tokenize → drop stopwords → look up each token in the training vocabulary → compute TF-IDF. Tokens not in the 2,000-word vocabulary (<code>iphone</code>, <code>xyz</code>) are silently dropped. Here is what survives:</p>
+
+  <table>
+    <thead><tr><th>idx</th><th>Token</th><th>TF-IDF</th></tr></thead>
+    <tbody>
+      <tr><td><code>264</code></td><td><code>bit</code></td><td><code>0.3747</code></td></tr>
+      <tr><td><code>391</code></td><td><code>claim</code></td><td><code>0.3301</code></td></tr>
+      <tr><td><code>397</code></td><td><code>click</code></td><td><code>0.4939</code></td></tr>
+      <tr><td><code>695</code></td><td><code>free</code></td><td><code>0.2791</code></td></tr>
+      <tr><td><code>853</code></td><td><code>http</code></td><td><code>0.4256</code></td></tr>
+      <tr><td><code>1369</code></td><td><code>prize</code></td><td><code>0.3475</code></td></tr>
+      <tr><td><code>1930</code></td><td><code>win</code></td><td><code>0.3562</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>Seven features. The other 1,993 columns are zero. Those seven numbers are the entire fingerprint the model sees.</p>
+
+  <h3>13.5 &nbsp; The Math — Naive Bayes, Step by Step</h3>
+  <p>Bayes' rule for classification:</p>
+  <div class="math">
+  P(class <span class="op">|</span> x) <span class="op">∝</span> P(class) · <span class="op">∏</span><sub>i</sub> P(word<sub>i</sub> <span class="op">|</span> class)<sup>x<sub>i</sub></sup>
+  </div>
+  <p>Take logs to keep the numbers sane:</p>
+  <div class="math">
+  log P(class <span class="op">|</span> x) <span class="op">=</span> log P(class) <span class="op">+</span> <span class="op">Σ</span><sub>i</sub> x<sub>i</sub> · log P(word<sub>i</sub> <span class="op">|</span> class) <span class="op">+</span> const
+  </div>
+
+  <p>For our seven non-zero features, <code>feature_log_prob_</code> gives us:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Token</th>
+        <th>TF-IDF (x<sub>i</sub>)</th>
+        <th>log P(w | ham)</th>
+        <th>log P(w | spam)</th>
+        <th>∆ (spam − ham)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>bit</code></td>  <td>0.3747</td> <td>-6.549</td> <td>-8.208</td> <td class="miss">-1.659</td></tr>
+      <tr><td><code>claim</code></td><td>0.3301</td> <td>-9.168</td> <td>-5.339</td> <td class="hit">+3.828</td></tr>
+      <tr><td><code>click</code></td><td>0.4939</td> <td>-8.540</td> <td>-7.405</td> <td class="hit">+1.135</td></tr>
+      <tr><td><code>free</code></td> <td>0.2791</td> <td>-6.448</td> <td>-4.838</td> <td class="hit">+1.610</td></tr>
+      <tr><td><code>http</code></td> <td>0.4256</td> <td>-9.168</td> <td>-6.425</td> <td class="hit">+2.743</td></tr>
+      <tr><td><code>prize</code></td><td>0.3475</td> <td>-9.168</td> <td>-5.446</td> <td class="hit">+3.721</td></tr>
+      <tr><td><code>win</code></td>  <td>0.3562</td> <td>-8.049</td> <td>-5.785</td> <td class="hit">+2.264</td></tr>
+    </tbody>
+  </table>
+
+  <p>Six of seven features lean spam. <code>claim</code>, <code>prize</code>, and <code>http</code> are overwhelming — they almost never occur in ham, which makes <code>log P(word | ham)</code> extremely negative. Only <code>bit</code> tilts toward ham (it appears in casual messages like "a bit later").</p>
+
+  <p>Now plug it all into Bayes:</p>
+
+  <div class="math">
+  <strong>log P(ham <span class="op">|</span> x)</strong>  <span class="op">=</span> <span class="num">-0.1330</span>  <span class="op">+</span>  <span class="op">Σ</span> x<sub>i</sub> · log P(w<sub>i</sub> <span class="op">|</span> ham)  <span class="op">=</span>  <span class="num">-21.586</span><br>
+  <strong>log P(spam <span class="op">|</span> x)</strong> <span class="op">=</span> <span class="num">-2.0828</span>  <span class="op">+</span>  <span class="op">Σ</span> x<sub>i</sub> · log P(w<sub>i</sub> <span class="op">|</span> spam) <span class="op">=</span>  <span class="num">-18.617</span>
+  </div>
+
+  <p>Spam has the larger log-probability (less negative). Softmax to turn the two logs into proper posteriors:</p>
+
+  <div class="math">
+  P(ham <span class="op">|</span> x)  <span class="op">=</span>  <span class="num">0.0488</span>  &nbsp;&nbsp;&nbsp; <span class="op">(4.88%)</span><br>
+  <strong>P(spam <span class="op">|</span> x) <span class="op">=</span> <span class="num">0.9512</span>  &nbsp;&nbsp;&nbsp; <span class="op">(95.12%)</span></strong><br>
+  argmax <span class="op">=</span> <span class="var">'spam'</span>
+  </div>
+
+  <div class="callout success"><strong>Verification.</strong> These numbers match <code>nb.predict_proba([...])</code> exactly: <code>[0.04884, 0.95116]</code>. Not approximately — to the 14th decimal place. <em>That</em> is what it means to understand your model.</div>
+
+  <h3>13.6 &nbsp; The Math — Logistic Regression, Same Message</h3>
+  <p>Different model, same input. Logistic regression stores one weight per feature plus an intercept:</p>
+  <div class="math">
+  lr.intercept_  <span class="op">=</span> <span class="num">-2.6070</span>  <span class="op"># bias toward ham (negative = less likely spam)</span><br>
+  lr.coef_       <span class="op">=</span> array of shape <span class="num">(1, 2000)</span>  <span class="op"># positive → pushes toward 'spam'</span>
+  </div>
+
+  <p>For each non-zero feature, multiply <code>coef × tfidf</code> and sum:</p>
+
+  <table>
+    <thead><tr><th>Token</th><th>TF-IDF</th><th>coef (spam)</th><th>product</th></tr></thead>
+    <tbody>
+      <tr><td><code>bit</code></td>   <td>0.3747</td><td>-0.493</td><td class="miss">-0.185</td></tr>
+      <tr><td><code>claim</code></td> <td>0.3301</td><td>+3.309</td><td class="hit">+1.092</td></tr>
+      <tr><td><code>click</code></td> <td>0.4939</td><td>+0.436</td><td class="hit">+0.216</td></tr>
+      <tr><td><code>free</code></td>  <td>0.2791</td><td>+3.025</td><td class="hit">+0.844</td></tr>
+      <tr><td><code>http</code></td>  <td>0.4256</td><td>+1.825</td><td class="hit">+0.777</td></tr>
+      <tr><td><code>prize</code></td> <td>0.3475</td><td>+2.524</td><td class="hit">+0.877</td></tr>
+      <tr><td><code>win</code></td>   <td>0.3562</td><td>+2.292</td><td class="hit">+0.816</td></tr>
+    </tbody>
+  </table>
+
+  <div class="math">
+  z <span class="op">=</span> intercept <span class="op">+</span> <span class="op">Σ</span> (coef<sub>i</sub> · x<sub>i</sub>) <span class="op">=</span>  -2.607 + 4.437  <span class="op">=</span>  <span class="num">1.8303</span><br>
+  P(spam <span class="op">|</span> x) <span class="op">=</span> σ(z) <span class="op">=</span> 1 / (1 + e<sup>-1.8303</sup>) <span class="op">=</span>  <span class="num">0.8618</span>  <span class="op">(86.18%)</span>
+  </div>
+
+  <p>Both models agree: <span class="pill bad">spam</span>. NB is more confident (95%) because it treats the seven "spammy" tokens as multiplicative evidence; LR treats them as additive log-odds. Two different worldviews, same answer.</p>
+
+  <div class="callout"><strong>This is the whole of "doing ML" in one test message:</strong> text → tokenized → mapped to a sparse 2,000-dim TF-IDF vector → dotted against either log-probability tables (NB) or weight vectors (LR) → passed through softmax or sigmoid → argmax → label. Every production spam filter, every review classifier, every toxicity detector is a variation on this same machinery.</div>
+
+  <!-- 14 -->
+  <h2><span class="num">§14</span>Reality Check: 15 Real-World Messages</h2>
+  <p>A 97.77% test accuracy looks glorious. But you have not really tested a model until you hand it text your test set has never seen. We wrote 15 modern, hand-crafted messages and ran them through <code>predict_text</code>.</p>
+
+  <table>
+    <thead><tr><th>#</th><th>Message (abbreviated)</th><th>Expected</th><th>Predicted</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>"Your bank alert: a $40 charge at Starbucks was authorized on your card."</td><td>ham</td><td class="hit">ham ✓</td></tr>
+      <tr><td>2</td><td>"CONGRATULATIONS! You've won a $1000 gift card. Click http://bit.ly/xyz to claim."</td><td>spam</td><td class="hit">spam ✓</td></tr>
+      <tr><td>3</td><td>"Hey, running 10 mins late, see you at the office."</td><td>ham</td><td class="hit">ham ✓</td></tr>
+      <tr><td>4</td><td>"URGENT: your account has been suspended. Verify immediately: http://secure-login-bank.co"</td><td>spam</td><td class="hit">spam ✓</td></tr>
+      <tr><td>5</td><td>"Interested in a senior backend role at Stripe? Happy to chat."</td><td>ham</td><td class="hit">ham ✓</td></tr>
+      <tr><td>6</td><td>"FREE PIZZA Friday, 4th floor kitchen at 12."</td><td>ham</td><td class="hit">ham ✓</td></tr>
+      <tr><td>7</td><td>"WhatsApp Gold is available now! Download the premium version before it's banned."</td><td>spam</td><td class="miss">ham ✗</td></tr>
+      <tr><td>8</td><td>"Mom, can you pick up milk on the way home?"</td><td>ham</td><td class="hit">ham ✓</td></tr>
+      <tr><td>…</td><td>(15 total)</td><td></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:1.05rem"><strong>Final score: 14 / 15 = 93%.</strong></p>
+
+  <p>The WhatsApp Gold miss is the single most educational moment of the episode. Our training data is <strong>SMS from 2002</strong>. The words <code>whatsapp</code>, <code>download</code>, <code>premium</code>, <code>banned</code>, <code>gold</code> (in this phishing sense) do not exist in the UCI corpus — so they are silently dropped in §13.4 style. The model scores the message using the words it <em>does</em> know, which look benign. It says ham.</p>
+
+  <div class="callout warn"><strong>The lesson:</strong> model accuracy describes the test set, not the world. 97.77% means "of messages very similar to training, I get 97.77% right". When the input distribution shifts — new slang, new product names, a new scam — accuracy degrades silently. This is <em>concept drift</em>, and monitoring for it is its own discipline.</div>
+
+  <!-- 15 -->
+  <h2><span class="num">§15</span>Exercise vs Production: What We Did Not Do</h2>
+  <p>Every choice we made has a production counterpart. Worth listing, because the gap is where the real engineering lives.</p>
+
+  <table>
+    <thead><tr><th>Area</th><th>What we did (exercise)</th><th>Production</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Data</strong></td>
+        <td>One labeled CSV, once.</td>
+        <td>Continuous collection, labeling pipeline, class-imbalance handling (SMOTE, class weights), scheduled re-training.</td>
+      </tr>
+      <tr>
+        <td><strong>Splitting</strong></td>
+        <td>Single 80/20 stratified split, <code>random_state=42</code>.</td>
+        <td>k-fold CV for stable estimates; time-based splits to simulate drift; a final hold-out set never touched until acceptance.</td>
+      </tr>
+      <tr>
+        <td><strong>Features</strong></td>
+        <td>TF-IDF, English stopwords, 2,000 features.</td>
+        <td>Character n-grams (obfuscated URLs), domain features (link count, emoji count, phone numbers), sentence embeddings.</td>
+      </tr>
+      <tr>
+        <td><strong>Models</strong></td>
+        <td>LR + NB at defaults, pick higher accuracy.</td>
+        <td><code>GridSearchCV</code> / Optuna, calibrated probabilities, threshold tuning per precision/recall target, ensembling.</td>
+      </tr>
+      <tr>
+        <td><strong>Metrics</strong></td>
+        <td>Accuracy.</td>
+        <td>Precision, recall, F1, PR-AUC, confusion matrix, cost-weighted metrics — accuracy on 87/13 is borderline useless alone.</td>
+      </tr>
+      <tr>
+        <td><strong>Serving</strong></td>
+        <td><code>joblib.load</code> in a CLI.</td>
+        <td>Versioned model registry, feature store, stateless inference service (FastAPI/uvicorn), health checks, latency SLOs.</td>
+      </tr>
+      <tr>
+        <td><strong>Monitoring</strong></td>
+        <td>pytest.</td>
+        <td>Data/prediction drift monitoring, shadow deployments, A/B tests, alerting on daily spam rate anomalies.</td>
+      </tr>
+      <tr>
+        <td><strong>Orchestration</strong></td>
+        <td><code>make train</code>.</td>
+        <td>Airflow / Prefect / Dagster DAG — clean → train → evaluate → promote, triggered by data landing.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>You don't need any of that today. You need to know that everything we <em>did</em> build maps to a box in that larger picture.</p>
+
+  <!-- 16 GLOSSARY -->
+  <h2><span class="num">§16</span>Glossary</h2>
+  <dl>
+    <div><dt>Classifier</dt><dd>A model that maps an input to a discrete label. Here: message → <code>ham</code> / <code>spam</code>.</dd></div>
+    <div><dt>Supervised learning</dt><dd>Training on examples where the correct label is known.</dd></div>
+    <div><dt>Ham / Spam</dt><dd>The two labels in the SMS Spam Collection. <em>Ham</em> is the term of art for "not spam".</dd></div>
+    <div><dt>Train / Test split</dt><dd>Partition the labeled data — most goes to training, a held-out slice estimates real-world performance.</dd></div>
+    <div><dt>Stratified split</dt><dd>A split that preserves the class ratio in both parts.</dd></div>
+    <div><dt>random_state</dt><dd>A seed for the RNG. Fix it for reproducible splits.</dd></div>
+    <div><dt>Feature</dt><dd>A numeric input the model consumes. Here, each TF-IDF column is one feature.</dd></div>
+    <div><dt>Bag of words</dt><dd>Representing a document as the multiset of its words, ignoring order.</dd></div>
+    <div><dt>TF-IDF</dt><dd><em>Term Frequency × Inverse Document Frequency</em>. Scores a word higher when frequent here and rare across the corpus.</dd></div>
+    <div><dt>Stopwords</dt><dd>Very common words (<em>the, is, a</em>) dropped because they carry no signal.</dd></div>
+    <div><dt>Vocabulary</dt><dd>The sorted set of tokens the vectorizer learned from training. Each entry is one feature column.</dd></div>
+    <div><dt>Sparse matrix / CSR</dt><dd>A matrix where almost all entries are zero, stored compactly. CSR groups non-zeros by row for fast slicing.</dd></div>
+    <div><dt>.fit()</dt><dd>Learn from training data (vocabulary for a vectorizer; weights / probabilities for a model).</dd></div>
+    <div><dt>.transform()</dt><dd>Apply what was learned to new data. No internal state changes.</dd></div>
+    <div><dt>.fit_transform()</dt><dd>Shortcut for fit then transform on the same data. Only valid on <strong>training</strong>.</dd></div>
+    <div><dt>.predict()</dt><dd>Produce labels for new inputs using the already-fitted model.</dd></div>
+    <div><dt>Logistic regression</dt><dd>Predicts log-odds as a weighted sum of features, squashed with the sigmoid to a probability.</dd></div>
+    <div><dt>Multinomial naive Bayes</dt><dd>Estimates P(word | class) from training counts and applies Bayes' rule at predict time. Surprisingly strong on short text.</dd></div>
+    <div><dt>Prior / Posterior</dt><dd><em>Prior</em> P(class) is the class's frequency before seeing the message. <em>Posterior</em> P(class | x) is the updated belief after seeing it.</dd></div>
+    <div><dt>Softmax / Sigmoid</dt><dd>Functions that turn raw scores into probabilities. Softmax generalizes sigmoid to more than two classes.</dd></div>
+    <div><dt>Baseline model</dt><dd>A simple model trained first to set a performance floor.</dd></div>
+    <div><dt>Accuracy</dt><dd>Fraction of predictions that are correct. Misleading on imbalanced data.</dd></div>
+    <div><dt>Precision / Recall / F1</dt><dd>Metrics that separate "how clean were my positive predictions" from "how many positives did I catch". Topic of Episode 4.</dd></div>
+    <div><dt>Confusion matrix</dt><dd>An N×N grid of true vs predicted labels, showing <em>what kind</em> of mistakes the model makes.</dd></div>
+    <div><dt>Overfitting / Underfitting</dt><dd>Memorizing training data vs being too simple to capture signal.</dd></div>
+    <div><dt>Concept drift / Data drift</dt><dd>The world changes; yesterday's model degrades without code changing.</dd></div>
+    <div><dt>joblib / Artifact</dt><dd><code>joblib</code> is a fast serializer for NumPy-heavy Python objects. An <em>artifact</em> is a file a pipeline step emits for the next step (or production) to consume.</dd></div>
+    <div><dt>k-fold cross-validation</dt><dd>Rotate through <em>k</em> partitions, averaging scores. Much more stable than a single split.</dd></div>
+    <div><dt>Hyperparameter</dt><dd>A knob you set <em>before</em> training (<code>max_iter</code>, <code>max_features</code>, <code>test_size</code>).</dd></div>
+  </dl>
+
+  <!-- WRAP -->
+  <div class="conclusion">
+    <h3>Wrapping Up</h3>
+    <p>In Episode 3 we built an end-to-end classifier — licensed data, cleaning, stratified split, TF-IDF, two baseline models, serialized artifacts, prediction module, CLI, 15 passing tests — and then pried open the fitted model so the final prediction was no longer magic but arithmetic. The exercise is small; the skeleton is the one every production text-classification system has.</p>
+    <p style="margin-bottom:0">Next up: <strong>Episode 4 — proper evaluation metrics</strong> (precision, recall, F1, confusion matrix), a Jinja-rendered report, and the first honest answer to "is this model actually good enough to ship?"</p>
+  </div>
+
+  <div class="footer">
+    <em>AI is as good as our knowledge.</em> &nbsp;·&nbsp; Episode 03 · Learn AI by Doing It · Pragna Mohapatra
+  </div>
+
+</div>
+</body>
+</html>
