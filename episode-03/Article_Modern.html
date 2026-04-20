@@ -192,7 +192,7 @@
   </div>
 
   <!-- INTRO -->
-  <h2><span class="num">§0</span>Why DIY Projects in the Age of AI</h2>
+  <h2>Why DIY Projects in the Age of AI</h2>
   <p>Large language models write production code, generate test suites, and draft documentation in seconds. Deep mastery of one framework is no longer the differentiator. <strong>Knowing what to ask for</strong> — and understanding the code the AI hands back — is.</p>
   <p>Episode 1 ingested and cleaned raw data. Episode 2 profiled it and layered on an opt-in AI narrative. Episode 3 takes the next step: <strong>we train our first real ML model</strong>. A spam classifier. No deep learning. No GPU. Just <code>pandas</code>, <code>scikit-learn</code>, and the discipline of building one layer at a time so every function earns its place.</p>
 
@@ -220,12 +220,12 @@
   </div>
 
   <!-- 1 -->
-  <h2><span class="num">§1</span>Why Start with a Classifier</h2>
+  <h2>Why Start with a Classifier</h2>
   <p>Classification is the "hello world" of supervised ML. Inputs (messages, reviews, emails) → labels (<span class="pill good">ham</span><span class="pill bad">spam</span>, positive/negative, fraud/legit). The full pipeline that powers much larger systems — data loading, feature engineering, train/test discipline, model selection, serialization, inference — is already present in the smallest classifier.</p>
   <p>Build a spam classifier properly and the shape of the code carries straight to a next-token predictor, a review scorer, or a churn model. Only the math inside one call to <code>.fit()</code> changes.</p>
 
   <!-- 2 -->
-  <h2><span class="num">§2</span>Project Structure</h2>
+  <h2>Project Structure</h2>
 <pre><code>episode-03/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -252,7 +252,7 @@
   <p>No notebook, no dashboard, no model checked into git. The deliverables are reproducible artifacts in <code>data/artifacts/</code>.</p>
 
   <!-- 3 -->
-  <h2><span class="num">§3</span>Docker &amp; Infrastructure</h2>
+  <h2>Docker &amp; Infrastructure</h2>
   <p>Same pattern as Episode 2. Docker is not ceremony — it is how a collaborator six months from now gets the same NumPy version that produced your 97% accuracy.</p>
 
   <div class="file-header">Dockerfile</div>
@@ -300,7 +300,7 @@ jinja2==3.1.4
 pytest==8.3.5</code></pre>
 
   <!-- 4 -->
-  <h2><span class="num">§4</span>Get Real, Licensed Data</h2>
+  <h2>Get Real, Licensed Data</h2>
   <p>Toy datasets teach toy lessons. We grab the <strong>UCI SMS Spam Collection</strong> (CC BY 4.0):</p>
 <pre><code>curl -L -o data/sms_spam_collection.zip \
   https://archive.ics.uci.edu/static/public/228/sms+spam+collection.zip
@@ -309,7 +309,7 @@ unzip data/sms_spam_collection.zip -d data/</code></pre>
   <div class="callout warn"><strong>Heads up:</strong> this dataset is from 2002. No WhatsApp, no PayPal, no crypto. A model trained on it is a time capsule — fine for learning, dangerous for shipping. We revisit this in §14.</div>
 
   <!-- 5 -->
-  <h2><span class="num">§5</span>Load &amp; Clean the Labeled Dataset</h2>
+  <h2>Load &amp; Clean the Labeled Dataset</h2>
   <div class="file-header">src/training.py — clean_training_dataframe</div>
 <pre><code>REQUIRED_COLUMNS = {"text", "label"}
 
@@ -339,7 +339,7 @@ def clean_training_dataframe(dataframe: pd.DataFrame) -&gt; pd.DataFrame:
   <p>Validate columns · collapse whitespace · lowercase labels · drop empties &amp; exact duplicates. After dedup we go from 5,574 rows to <strong>5,158</strong>.</p>
 
   <!-- 6 -->
-  <h2><span class="num">§6</span>Train/Test Split &amp; Stratification</h2>
+  <h2>Train/Test Split &amp; Stratification</h2>
   <div class="callout q"><strong>"What is <code>stratify</code> doing, exactly?"</strong><br>On a dataset that is 87% ham / 13% spam, a random 80/20 split can — by bad luck — produce a test set that is 95% ham. Your "accuracy" then just rewards predicting ham always. Stratification <em>preserves the class ratio in both splits</em>.</div>
   <div class="callout q"><strong>"And <code>random_state</code>?"</strong><br>A seed for the RNG. Fixing it makes the random split reproducible across runs.</div>
   <div class="callout q"><strong>"What does <code>.fit()</code> actually do?"</strong><br>Vectorizer → scans training text, builds the vocabulary, computes document frequencies. Model → learns parameters (weights / probabilities). <code>.transform()</code> and <code>.predict()</code> just <em>apply</em> what was learned.</div>
@@ -368,7 +368,7 @@ def split_training_data(dataframe, *, test_size=DEFAULT_TEST_SIZE,
             "stratified": stratify is not None}</code></pre>
 
   <!-- 7 -->
-  <h2><span class="num">§7</span>TF-IDF: Text → Numbers</h2>
+  <h2>TF-IDF: Text → Numbers</h2>
   <p>Models do not read English. They consume vectors of floats. <strong>TF-IDF</strong> = <em>Term Frequency × Inverse Document Frequency</em>:</p>
   <ul>
     <li><strong>TF</strong> — a word that appears often in <em>this</em> message gets a higher score.</li>
@@ -389,7 +389,7 @@ def vectorize_text(X_train, X_test, *, max_features=2000):
   <div class="callout"><strong>Golden rule:</strong> <code>fit_transform</code> on train, <code>transform</code> on test. If you <code>fit</code> on test, your "held-out" accuracy is a lie — the vocabulary has already seen the answers.</div>
 
   <!-- 8 -->
-  <h2><span class="num">§8</span>Two Baseline Models, Side-by-Side</h2>
+  <h2>Two Baseline Models, Side-by-Side</h2>
   <p>Never train one model. You cannot tell whether the number you got is good without a reference.</p>
   <ul>
     <li><strong>Logistic Regression</strong> — linear weights per word; sum them; squash with sigmoid → P(spam).</li>
@@ -405,7 +405,7 @@ def vectorize_text(X_train, X_test, *, max_features=2000):
   </table>
 
   <!-- 9 -->
-  <h2><span class="num">§9</span>Save the Artifacts</h2>
+  <h2>Save the Artifacts</h2>
   <div class="file-header">src/training.py — train_classifier (end)</div>
 <pre><code>joblib.dump(best_model_obj,  output_path / "best_model.joblib")
 joblib.dump(vec["vectorizer"], output_path / "vectorizer.joblib")
@@ -413,7 +413,7 @@ metrics_file.write_text(json.dumps(metrics, indent=2))</code></pre>
   <div class="callout warn"><strong>The thing most tutorials get wrong:</strong> save the vectorizer <em>with</em> the model. Feature <code>#417</code> means "the word <em>won</em>" only because the vectorizer's vocabulary says so. Load the model without the vectorizer and your predictions are random noise.</div>
 
   <!-- 10 -->
-  <h2><span class="num">§10</span>The Prediction Module</h2>
+  <h2>The Prediction Module</h2>
   <div class="file-header">src/prediction.py</div>
 <pre><code>def load_artifacts(model_dir):
     p = Path(model_dir)
@@ -428,19 +428,19 @@ def predict_text(model_dir, text):
     return {"prediction": str(a["model"].predict(features)[0])}</code></pre>
 
   <!-- 11 -->
-  <h2><span class="num">§11</span>The CLI Entry Point</h2>
+  <h2>The CLI Entry Point</h2>
 <pre><code>python -m src.cli train   data/sms_spam_clean.csv data/artifacts
 python -m src.cli predict data/artifacts "WIN a FREE iPhone now!!! Click here"
 # → Prediction: spam</code></pre>
 
   <!-- 12 -->
-  <h2><span class="num">§12</span>Tests — All 15 of Them</h2>
+  <h2>Tests — All 15 of Them</h2>
   <p>15 tests across <code>test_training.py</code>, <code>test_prediction.py</code>, <code>test_cli.py</code>. Happy paths, empty-text errors, missing-artifact errors, CLI subprocess integration. <code>pytest -q</code> → <strong>15 passed</strong>.</p>
 
   <!-- ================================================================ -->
   <!-- 13 — UNDER THE HOOD -->
   <!-- ================================================================ -->
-  <h2><span class="num">§13</span>Under the Hood: The Math, End-to-End</h2>
+  <h2>Under the Hood: The Math, End-to-End</h2>
   <p>Everything up to here is plumbing. This section is the payoff: we take one real test message and walk it through every number the model touches — <strong>TF-IDF storage, the fitted model's internal state, the Bayes rule computation, and the final probability</strong>. Every value below is copy-pasted from a real run on the trained model.</p>
 
   <h3>13.1 &nbsp; How TF-IDF Is Stored</h3>
@@ -624,7 +624,7 @@ non-zero features (23 out of 2000):
   <div class="callout"><strong>This is the whole of "doing ML" in one test message:</strong> text → tokenized → mapped to a sparse 2,000-dim TF-IDF vector → dotted against either log-probability tables (NB) or weight vectors (LR) → passed through softmax or sigmoid → argmax → label. Every production spam filter, every review classifier, every toxicity detector is a variation on this same machinery.</div>
 
   <!-- 14 -->
-  <h2><span class="num">§14</span>Reality Check: 15 Real-World Messages</h2>
+  <h2>Reality Check: 15 Real-World Messages</h2>
   <p>A 97.77% test accuracy looks glorious. But you have not really tested a model until you hand it text your test set has never seen. We wrote 15 modern, hand-crafted messages and ran them through <code>predict_text</code>.</p>
 
   <table>
@@ -649,7 +649,7 @@ non-zero features (23 out of 2000):
   <div class="callout warn"><strong>The lesson:</strong> model accuracy describes the test set, not the world. 97.77% means "of messages very similar to training, I get 97.77% right". When the input distribution shifts — new slang, new product names, a new scam — accuracy degrades silently. This is <em>concept drift</em>, and monitoring for it is its own discipline.</div>
 
   <!-- 15 -->
-  <h2><span class="num">§15</span>Exercise vs Production: What We Did Not Do</h2>
+  <h2>Exercise vs Production: What We Did Not Do</h2>
   <p>Every choice we made has a production counterpart. Worth listing, because the gap is where the real engineering lives.</p>
 
   <table>
@@ -701,7 +701,7 @@ non-zero features (23 out of 2000):
   <p>You don't need any of that today. You need to know that everything we <em>did</em> build maps to a box in that larger picture.</p>
 
   <!-- 16 GLOSSARY -->
-  <h2><span class="num">§16</span>Glossary</h2>
+  <h2>Glossary</h2>
   <dl>
     <div><dt>Classifier</dt><dd>A model that maps an input to a discrete label. Here: message → <code>ham</code> / <code>spam</code>.</dd></div>
     <div><dt>Supervised learning</dt><dd>Training on examples where the correct label is known.</dd></div>
