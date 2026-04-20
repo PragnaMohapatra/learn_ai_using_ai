@@ -421,15 +421,15 @@ log P(class | x) = log P(class) + Σᵢ xᵢ · log P(wordᵢ | class) + const
 
 For our seven non-zero features, `feature_log_prob_` gives us:
 
-| Token | TF-IDF (xᵢ) | log P(w | ham) | log P(w | spam) | Δ (spam − ham) |
-|-------|-------------|----------------|-----------------|----------------|
-| bit   | 0.3747      | -6.549         | -8.208          | **-1.659**     |
-| claim | 0.3301      | -9.168         | -5.339          | **+3.828**     |
-| click | 0.4939      | -8.540         | -7.405          | **+1.135**     |
-| free  | 0.2791      | -6.448         | -4.838          | **+1.610**     |
-| http  | 0.4256      | -9.168         | -6.425          | **+2.743**     |
-| prize | 0.3475      | -9.168         | -5.446          | **+3.721**     |
-| win   | 0.3562      | -8.049         | -5.785          | **+2.264**     |
+| Token | TF-IDF (xᵢ) | log P(w given ham) | log P(w given spam) | Δ (spam − ham) |
+|-------|-------------|--------------------|---------------------|----------------|
+| bit   | 0.3747      | -6.549             | -8.208              | **-1.659**     |
+| claim | 0.3301      | -9.168             | -5.339              | **+3.828**     |
+| click | 0.4939      | -8.540             | -7.405              | **+1.135**     |
+| free  | 0.2791      | -6.448             | -4.838              | **+1.610**     |
+| http  | 0.4256      | -9.168             | -6.425              | **+2.743**     |
+| prize | 0.3475      | -9.168             | -5.446              | **+3.721**     |
+| win   | 0.3562      | -8.049             | -5.785              | **+2.264**     |
 
 Six of seven features lean spam. `claim`, `prize`, and `http` are overwhelming — they almost never occur in ham, which makes `log P(word | ham)` extremely negative. Only `bit` tilts toward ham (it appears in casual messages like "a bit later").
 
